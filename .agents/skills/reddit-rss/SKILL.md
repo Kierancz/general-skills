@@ -55,7 +55,7 @@ Every row above was run on 2026-09-19 and returned the entry count shown. **Chec
 
 1. **Preflight — one command, before anything else.**
    ```bash
-   "$SKILL_DIR/fetch-feed.sh" --preflight
+   bash "$SKILL_DIR/fetch-feed.sh" --preflight
    ```
    It reports whether an egress proxy is in front of you, probes a control host, then probes Reddit, and exits non-zero if this machine cannot do the job. Run it first in any environment you have not already fetched from — see Sandboxed And Cloud Environments.
 
@@ -63,11 +63,11 @@ Every row above was run on 2026-09-19 and returned the entry count shown. **Chec
 
 3. **Fetch with backoff.** This is the step that actually matters — see Rate Limiting.
    ```bash
-   "$SKILL_DIR/fetch-feed.sh" "https://www.reddit.com/r/<sub>/new.rss?limit=100" "$WORK/out.xml"
+   bash "$SKILL_DIR/fetch-feed.sh" "https://www.reddit.com/r/<sub>/new.rss?limit=100" "$WORK/out.xml"
    ```
    Pass several URLs to fetch them in sequence, paced:
    ```bash
-   "$SKILL_DIR/fetch-feed.sh" --out-dir "$WORK/feeds" "<url1>" "<url2>" "<url3>"
+   bash "$SKILL_DIR/fetch-feed.sh" --out-dir "$WORK/feeds" "<url1>" "<url2>" "<url3>"
    ```
 
 4. **Flatten to JSONL.**
