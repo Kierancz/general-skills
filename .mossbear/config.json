@@ -1,5 +1,16 @@
 {
+  "project": {
+    "id": "proj_87ccb76f63ecbe16324d39453ef9e889c5cc18d7"
+  },
   "published": {
-    "paths": [".agents/skills/**"]
-  }
+    "paths": [
+      ".agents/skills/**"
+    ]
+  },
+  "bundles": [
+    {
+      "id": "78bcf5da-61b9-4c5d-bc78-dea608ac52a3",
+      "slug": "general-skills"
+    }
+  ]
 }
