@@ -1,0 +1,32 @@
+# general-skills
+
+Agent skills that are not tied to any one codebase. Each lives in `.agents/skills/<name>/` as a `SKILL.md` plus any scripts it runs.
+
+| Skill | What it does |
+| --- | --- |
+| `address-review` | Triage pull request review comments, fix the valid ones, push |
+| `deploy-site` | Put a static page on the public internet with here.now and return its URL |
+| `orchestration` | Split work across subagents and sessions, with a model per subtask |
+| `reddit-rss` | Pull public Reddit posts and comments to JSONL through RSS, no API key |
+| `skill-creator` | Create, test and tune skills |
+| `transcribe-audio` | Transcribe audio with mlx-whisper on Apple Silicon |
+| `unslop` | Cut AI tells from prose |
+| `youtube-transcript` | Pull a YouTube video's captions to readable prose with yt-dlp |
+
+## Getting them
+
+This repo is the home of the `general-skills` bundle in [Mossbear](https://mossbear.io). Subscribe to it with global delivery and the skills land in `~/.claude/skills/` and `~/.agents/skills/` on every machine you use:
+
+```bash
+mossbear pull general-skills --account --deliver=global
+```
+
+Or copy a folder from `.agents/skills/` into your own skills directory.
+
+## Publishing
+
+`.mossbear/config.json` declares `.agents/skills/**` as published. After a change lands on `main`, run `mossbear publish` from a clone to update the bundle. Only this repo can write to it.
+
+## Licenses
+
+`skill-creator` comes from [anthropics/skills](https://github.com/anthropics/skills) under the Apache License 2.0 (`.agents/skills/skill-creator/LICENSE.txt`); this copy adds a section on reading Mossbear feedback for a skill. `unslop` is adapted from [cursor/plugins](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md).
