@@ -1,6 +1,8 @@
 ---
 name: orchestration
 description: 'Coordinate work using the current platform''s available subagents, separate sessions, and messaging tools. Choose Haiku for Claude and Luna for Codex by default, escalating only for complicated subtasks. Use for /orchestration, "orchestrate this", "delegate the work", "split this into subagents", or requests to coordinate several tasks. Do not use for a trivial task better handled directly or by a deterministic script.'
+metadata:
+  mossbear-id: 14cda08e-4ba2-483f-bb4b-ac3ad492b3c1
 ---
 
 # Orchestration

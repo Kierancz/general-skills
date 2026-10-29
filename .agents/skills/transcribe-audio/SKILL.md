@@ -3,6 +3,8 @@ name: transcribe-audio
 description: 'Transcribe an audio file (m4a, mp3, wav, mp4) to text using mlx-whisper on Apple Silicon. Use for call recordings, interviews, and voice memos.'
 argument-hint: 'Example: "Transcribe recordings/call-2026-04-09.m4a"'
 user-invocable: true
+metadata:
+  mossbear-id: ea207fc3-d044-4ee8-a007-e0e5b8aeb3eb
 ---
 
 # Transcribe Audio

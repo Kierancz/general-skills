@@ -3,6 +3,8 @@ name: unslop
 description: 'Cut AI tells from writing — puffery, AI vocabulary, em dashes, inline-header lists, sycophancy, filler — and put voice back in. Use for /unslop, "does this read like AI", "unslop this", "make this sound human", "edit this draft", or before shipping prose (README, launch post, docs page, PR body, guide). It edits voice in prose whose message is settled; deciding what marketing copy says (headline, claims, pitch) is marketing-copy, then unslop its draft. Do not use for in-product UI strings (that is design-audit / ui-review) or error copy (error-messaging.md).'
 argument-hint: 'Paste the text, or name the file/surface to edit. Defaults to the prose in the current diff.'
 user-invocable: true
+metadata:
+  mossbear-id: pzxN3bM4gvEJDG8FqX6naC
 ---
 
 # Unslop

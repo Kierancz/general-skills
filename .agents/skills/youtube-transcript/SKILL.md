@@ -3,6 +3,8 @@ name: youtube-transcript
 description: 'Pull a YouTube video''s captions to readable prose with yt-dlp, telling a genuine "no captions" apart from a bot block. Use for /youtube-transcript, "get the transcript of this video", "what did that video say about X", or mining a talk for what someone actually said.'
 argument-hint: 'Example: "Get the transcript of https://www.youtube.com/watch?v=<id>"'
 user-invocable: true
+metadata:
+  mossbear-id: 3247460e-b2e2-4327-bf01-4f6f1fef9f91
 ---
 
 # YouTube Transcript

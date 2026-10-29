@@ -3,6 +3,8 @@ name: reddit-rss
 description: 'Pull public Reddit posts and comments to JSONL through the RSS feeds, without an API key or an account. Use for /reddit-rss, "scrape reddit for X", "what are people saying on r/Y", "pull posts from that subreddit", "get that thread", or mining a community for the words people actually use.'
 argument-hint: 'Example: "Pull the last week of r/ClaudeAI about rules files"'
 user-invocable: true
+metadata:
+  mossbear-id: 1b5abffc-2e6d-4583-a5c5-b0a893436b44
 ---
 
 # Reddit RSS

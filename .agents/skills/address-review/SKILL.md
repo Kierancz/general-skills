@@ -3,6 +3,8 @@ name: address-review
 description: 'Read pull request review comments, triage valid vs stale feedback, implement narrow fixes, validate them, and push the PR branch. Use for /address-review, PR review follow-up, inline comment triage, GitHub review threads, gh api graphql reviewThreads, reviewer feedback fixes, and Claude Code or Copilot review cleanup. Do not use for opening new PRs or broad unsolicited refactors. Do not mark review threads as resolved — leave that decision to the human reviewer.'
 argument-hint: 'Describe the PR number or branch, the review comments to address, and any validation or push constraints.'
 user-invocable: true
+metadata:
+  mossbear-id: 8c66f3fe-bd9c-4de9-9f06-3c8c23e6dffb
 ---
 
 # Address Review

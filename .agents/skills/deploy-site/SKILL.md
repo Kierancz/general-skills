@@ -3,6 +3,8 @@ name: deploy-site
 description: 'Put a static web page on the public internet for free and hand back its live URL — one .html file or a folder, including an HTML artifact saved in Mossbear. Use for /deploy-site, "deploy this page", "put this online", "give me a link I can share", "host this HTML", "publish this artifact as a website", or as the last step of a skill that builds a page to share. Do not use for anything with a server, a database or secrets, or to deploy the Mossbear product itself (that is the release workflows).'
 argument-hint: 'Example: "Deploy this Mossbear artifact so I can send it to friends: <artifact URL>"'
 user-invocable: true
+metadata:
+  mossbear-id: r6xBwgRslRICYeSElXOR1V
 ---
 
 # Deploy Site
