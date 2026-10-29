@@ -3,11 +3,15 @@
 
   python3 photo_filer.py plan  <source> [--dest DIR] [--copy] [--exclude GLOB]...   writes a plan, moves nothing
   python3 photo_filer.py apply <plan.csv>                                            carries out exactly that plan
+  python3 photo_filer.py apply <log.csv> --retry                                     tries a plan's failed rows again
   python3 photo_filer.py undo  <log.csv> [--run]                                     puts files back (preview without --run)
+  python3 photo_filer.py prune <log.csv> [--run]                                     removes source folders a move emptied
 
 Dates come from exiftool (DateTimeOriginal, then QuickTime/EXIF/XMP create dates), then from a date in
-the filename, else the file goes to Undated/. File modified times are never used. Byte-identical copies
-go to _duplicates/ for review. Nothing is ever deleted, and an existing file is never overwritten.
+the filename, then from a YEAR/YEAR-MM-DD or YEAR/MM/DD folder, else the file goes to Undated/. File
+modified times are never used. Byte-identical copies go to _duplicates/ for review (in copy mode they are
+only listed). With --dest, files already in the library's YEAR/ folders count as duplicates and are never
+moved. No photo is ever deleted, and an existing file is never overwritten.
 """
 
 import argparse
@@ -20,6 +24,7 @@ import os
 import re
 import shutil
 import sqlite3
+import stat
 import subprocess
 import sys
 from collections import Counter, defaultdict
@@ -153,6 +158,28 @@ def walk(source, excludes, dest):
     return media, sidecars, skipped, catalogs
 
 
+def library_files(dest, source):
+    """Photos already filed in dest's YEAR/ folders, outside the source. They are compared for
+    duplicates and never moved."""
+    out = []
+    years = [e for e in sorted(os.listdir(dest)) if re.fullmatch(r"(?:18|19|20)\d{2}", e)] \
+        if os.path.isdir(dest) else []
+    for y in years:
+        for dirpath, dirnames, filenames in os.walk(os.path.join(dest, y)):
+            if os.path.normpath(dirpath) == source or dirpath.startswith(source + os.sep):
+                dirnames[:] = []
+                continue
+            dirnames[:] = [d for d in dirnames if not d.startswith(".") and not is_package(dirpath, d)]
+            for fn in filenames:
+                p = os.path.join(dirpath, fn)
+                if fn.startswith(".") or ext_of(fn) not in MEDIA_EXT or os.path.islink(p):
+                    continue
+                st = os.stat(p)
+                if not getattr(st, "st_flags", 0) & SF_DATALESS:
+                    out.append({"path": p, "size": st.st_size, "lib": True})
+    return out
+
+
 def exif_dates(paths):
     if not shutil.which("exiftool"):
         die("exiftool is not installed. On macOS: brew install exiftool")
@@ -181,13 +208,19 @@ def exif_dates(paths):
 
 
 def folder_date(dirpath):
-    """A file already sitting in YEAR/YEAR-MM-DD/ was dated by someone. Only this exact scheme counts."""
-    day, year = os.path.basename(dirpath), os.path.basename(os.path.dirname(dirpath))
+    """A file already sitting in YEAR/YEAR-MM-DD/, or the older YEAR/MM/DD/, was dated by someone.
+    Only these exact schemes count."""
+    day, parent = os.path.basename(dirpath), os.path.dirname(dirpath)
     m = re.fullmatch(r"((?:18|19|20)\d{2})-(\d{2})-(\d{2})", day)
-    if not m or m.group(1) != year:
+    if m and m.group(1) == os.path.basename(parent):
+        y, mo, d = m.groups()
+    elif (re.fullmatch(r"\d{2}", day) and re.fullmatch(r"\d{2}", os.path.basename(parent))
+          and re.fullmatch(r"(?:18|19|20)\d{2}", os.path.basename(os.path.dirname(parent)))):
+        y, mo, d = os.path.basename(os.path.dirname(parent)), os.path.basename(parent), day
+    else:
         return None
     try:
-        d = dt.datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        d = dt.datetime(int(y), int(mo), int(d))
     except ValueError:
         return None
     return d if plausible(d) else None
@@ -297,17 +330,31 @@ def plan(args):
     by_size = defaultdict(list)
     for m in media:
         by_size[m["size"]].append(m)
+    # Filing into a separate library: what is already there counts, under any name, and always wins.
+    library = library_files(dest, source) if dest != source else []
+    for f in library:
+        if f["size"] in by_size:
+            by_size[f["size"]].append(f)
     dup_of = {}
     for group in (g for g in by_size.values() if len(g) > 1 and g[0]["size"] > 0):
         by_hash = defaultdict(list)
         for m in group:
             by_hash[h(m["path"])].append(m)
         for same in (g for g in by_hash.values() if len(g) > 1):
+            ours = [m for m in same if not m.get("lib")]
+            theirs = sorted(m["path"] for m in same if m.get("lib"))
+            if theirs:
+                for r in ours:
+                    dup_of[id(r)] = theirs[0]
+                continue
+            if len(ours) < 2:
+                continue
+
             def keeper_rank(m):
                 stem = m["name"].rsplit(".", 1)[0]
                 in_place = os.path.normpath(m["dir"]) == os.path.normpath(target_dir(m))
                 return (not in_place, SOURCE_RANK[m["source"]], bool(COPY_NAME.search(stem)), len(m["path"]), m["path"])
-            keep, *rest = sorted(same, key=keeper_rank)
+            keep, *rest = sorted(ours, key=keeper_rank)
             for r in rest:
                 dup_of[id(r)] = keep["path"]
 
@@ -326,9 +373,10 @@ def plan(args):
                 "size": m["size"], "mtime_ns": m["mtime_ns"], "sha256": hashes.get(m["path"], ""), "src": m["path"]}
         note = f"Live Photo video of {m['pair']}" if m.get("pair") else ""
         if id(m) in dup_of:
-            d, _ = names.claim(dup_dir(m), m["name"])
+            # In copy mode the original stays where it is, so a second copy of it would only use space.
+            d = "" if args.copy else names.claim(dup_dir(m), m["name"])[0]
             rows.append({**base, "action": "duplicate", "dst": d, "note": f"same bytes as {dup_of[id(m)]}"})
-            moved_out[m["dir"]] += 1
+            moved_out[m["dir"]] += 0 if args.copy else 1
             continue
         if id(m) in stays:
             rows.append({**base, "action": "keep", "dst": m["path"], "note": "already filed"})
@@ -338,7 +386,7 @@ def plan(args):
         d, why = names.claim(target_dir(m), m["name"], same_bytes)
         if why:
             rows.append({**base, "action": "duplicate",
-                         "dst": names.claim(dup_dir(m), m["name"])[0],
+                         "dst": "" if args.copy else names.claim(dup_dir(m), m["name"])[0],
                          "note": f"same bytes as {d}"})
         else:
             rows.append({**base, "action": "undated" if m["date"] is None else "file", "dst": d, "note": note})
@@ -361,10 +409,14 @@ def plan(args):
         if r["action"] == "keep":
             rows.append({**base, "action": "keep", "dst": s["path"], "note": f"sidecar of {owner['name']}"})
             continue
+        if not r["dst"]:
+            rows.append({**base, "action": "duplicate", "dst": "", "note": f"sidecar of {owner['name']}"})
+            continue
         d, _ = names.claim(os.path.dirname(r["dst"]), s["name"])
         rows.append({**base, "action": "sidecar", "dst": d, "note": f"sidecar of {owner['name']}"})
         moved_out[s["dir"]] += 1
 
+    locked = find_locked(rows, args.copy)
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     plan_path = Path(args.plan or STATE_DIR / f"plan-{stamp}.csv")
@@ -373,10 +425,41 @@ def plan(args):
         w = csv.DictWriter(f, fieldnames=FIELDS)
         w.writeheader()
         w.writerows(rows)
-    summarize(rows, skipped, notes, moved_out, media, sidecars, args.copy, plan_path, source, dest)
+    summarize(rows, skipped, notes, moved_out, media, sidecars, args.copy, plan_path, source, dest,
+              len(library), locked)
 
 
-def summarize(rows, skipped, notes, moved_out, media, sidecars, copy, plan_path, source, dest):
+def find_locked(rows, copy):
+    """Folders and files the plan needs to change but macOS will refuse: a deny rule (ACL) on a folder,
+    missing write permission, or a locked (uchg) file. Found now, so apply doesn't fail row by row."""
+    locked, ok = Counter(), {}
+
+    def writable(d):
+        if d not in ok:
+            ok[d] = os.access(d, os.W_OK | os.X_OK)
+        return ok[d]
+
+    for r in rows:
+        if r["action"] == "keep" or not r["dst"]:
+            continue
+        hit = None
+        target = existing_parent(os.path.dirname(r["dst"]))
+        if not writable(target):
+            hit = ("folder", target)
+        elif not copy:
+            src_dir = os.path.dirname(r["src"])
+            if not writable(src_dir):
+                hit = ("folder", src_dir)
+            elif getattr(os.lstat(r["src"]), "st_flags", 0) & (stat.UF_IMMUTABLE | stat.SF_IMMUTABLE):
+                hit = ("file", r["src"])
+        if hit:
+            locked[hit] += 1
+            r["note"] = (r["note"] + "; " if r["note"] else "") + f"will fail: {hit[0]} is locked"
+    return locked
+
+
+def summarize(rows, skipped, notes, moved_out, media, sidecars, copy, plan_path, source, dest,
+              library_count=0, locked=None):
     acts = Counter(r["action"] for r in rows)
     srcs = Counter(r["date_source"] for r in rows if r["date_source"])
     dup_bytes = sum(int(r["size"]) for r in rows if r["action"] == "duplicate")
@@ -386,31 +469,47 @@ def summarize(rows, skipped, notes, moved_out, media, sidecars, copy, plan_path,
     print(f"  {len(media)} photos/videos, {len(sidecars)} sidecars")
     labels = [("file", f"{verb} into YEAR/YEAR-MM-DD"), ("keep", "already in the right folder"),
               ("undated", f"no date anywhere: {verb} to {UNDATED}/"),
-              ("duplicate", f"byte-identical copy: {verb} to {DUPLICATES}/ for review"),
+              ("duplicate", "byte-identical copy: not copied, only listed in the plan" if copy
+               else f"byte-identical copy: move to {DUPLICATES}/ for review"),
               ("sidecar", f"sidecar ({'/'.join(sorted(SIDECAR_EXT))}) follows its photo")]
     for key, text in labels:
         if acts[key]:
             print(f"  {acts[key]:6}  {text}")
     if dup_bytes:
         print(f"          duplicates total {dup_bytes / 1e9:.2f} GB")
+    if library_count:
+        print(f"  checked against {library_count} files already filed in {dest} (never moved)")
     print("  dated by: " + ", ".join(f"{k} {v}" for k, v in srcs.most_common()))
+    if locked:
+        print(f"  WILL FAIL: {sum(locked.values())} files, because macOS won't let these be changed:")
+        for (kind, p), n in locked.most_common(10):
+            print(f"    {p}  ({n} files; locked {kind})")
+        if len(locked) > 10:
+            print(f"    ...and {len(locked) - 10} more")
+        print('    see why: ls -led "<folder>"  (a "deny" line is a permission rule; "uchg" is a lock)\n'
+              '    the user can lift a rule with chmod -N "<folder>" (-RN for everything inside) and a lock '
+              'with chflags nouchg "<file>"; then re-plan')
     if skipped:
         print("  left alone:")
         for k, v in sorted(skipped.items(), key=lambda kv: -kv[1]):
             print(f"    {v:6}  {k}")
     for n in notes:
         print(f"  note: {n}")
-    refiled = sum(1 for r in rows if r["action"] == "file" and folder_date(os.path.dirname(r["src"])))
+    refiled = sum(1 for r in rows if r["action"] == "file" and folder_date(os.path.dirname(r["src"]))
+                  and folder_date(os.path.dirname(r["src"])).date() != dt.datetime.strptime(r["date"][:10], "%Y-%m-%d").date())
     if refiled:
-        print(f"  {refiled} files already sit in a date folder, but their metadata says another day; they move")
+        print(f"  {refiled} files sit in a date folder for a different day than their metadata says; "
+              "they move to the metadata's day")
     emptied = []
     for d, n in moved_out.items():
         try:
             left = [e for e in os.listdir(d) if not e.startswith(".")]
         except OSError:
             continue
-        if not copy and n >= len(left) and os.path.normpath(d) != os.path.normpath(source):
-            emptied.append(os.path.relpath(d, source))
+        rel = os.path.relpath(d, source)
+        # Only a folder with a name worth keeping is worth warning about: not 2013/08/10 or 2014-01-22.
+        if not copy and n >= len(left) and rel != "." and not folder_date(d) and re.search(r"[^\W\d_]", rel):
+            emptied.append(rel)
     if emptied:
         print(f"  folders this empties ({len(emptied)}); a folder name is lost once its files move:")
         for e in sorted(emptied)[:15]:
@@ -421,7 +520,8 @@ def summarize(rows, skipped, notes, moved_out, media, sidecars, copy, plan_path,
     if sample:
         print("  examples:")
         for r in sample:
-            print(f"    {os.path.relpath(r['src'], source)}  ->  {os.path.relpath(r['dst'], dest)}  [{r['date_source']}]")
+            to = os.path.relpath(r["dst"], dest) if r["dst"] else f"(not copied; {r['note']})"
+            print(f"    {os.path.relpath(r['src'], source)}  ->  {to}  [{r['date_source']}]")
     print(f"\n  full plan: {plan_path}")
     print(f"  to carry it out: python3 \"{os.path.abspath(__file__)}\" apply \"{plan_path}\"")
 
@@ -472,24 +572,61 @@ def same_volume(src, dst):
         return True  # a missing source fails on its own row
 
 
+def read_log(path):
+    with open(path, newline="") as f:
+        header = f.readline()
+        if not header.startswith("# photo-filer log"):
+            die(f"{path} is not a photo-filer log")
+        meta = dict(kv.split("=", 1) for kv in header[2:].strip().split("; ")[1:])
+        if "source" not in meta and os.path.exists(meta.get("plan", "")):
+            meta["source"] = read_plan(meta["plan"])[0].get("source", "")
+        return meta, list(csv.DictReader(f))
+
+
+def retry_plan(log):
+    """A new plan holding only the rows that failed in an applied plan's log, so they can be tried again
+    once the cause (a lock, a full disk) is fixed. Each row is still re-checked against the plan."""
+    meta, rows = read_log(log)
+    failed = [{k: r[k] for k in FIELDS} for r in rows if r["status"] == "failed"]
+    if not failed:
+        die(f"nothing failed in {log}")
+    stem = Path(log).stem.replace("log-", "plan-", 1)
+    n = 1
+    while Path(log).with_name(f"{stem}-retry{n}.csv").exists():
+        n += 1
+    path = Path(log).with_name(f"{stem}-retry{n}.csv")
+    with open(path, "w", newline="") as f:
+        f.write(f"# photo-filer plan; mode={meta.get('mode')}; source={meta.get('source', '')}; dest={meta.get('dest')}\n")
+        w = csv.DictWriter(f, fieldnames=FIELDS)
+        w.writeheader()
+        w.writerows(failed)
+    print(f"  retrying {len(failed)} failed rows from {log} (plan: {path})")
+    return str(path)
+
+
 def apply(args):
+    if args.retry:
+        args.plan = retry_plan(args.plan)
     meta, rows = read_plan(args.plan)
     copy = meta.get("mode") == "copy"
     stem = Path(args.plan).stem
     log_path = Path(args.plan).with_name((stem.replace("plan-", "log-", 1) if stem.startswith("plan-") else f"log-{stem}") + ".csv")
     if log_path.exists():
-        die(f"{log_path} already exists: this plan was applied already. Make a new plan")
-    need = sum(int(r["size"]) for r in rows if r["action"] != "keep" and (copy or not same_volume(r["src"], r["dst"])))
+        die(f"{log_path} already exists: this plan was applied already. "
+            f"To try its failed rows again: apply \"{log_path}\" --retry")
+    need = sum(int(r["size"]) for r in rows
+               if r["action"] != "keep" and r["dst"] and (copy or not same_volume(r["src"], r["dst"])))
     free = shutil.disk_usage(existing_parent(meta["dest"])).free
     if need > free * 0.98:
         die(f"needs {need / 1e9:.2f} GB on {meta['dest']} but only {free / 1e9:.2f} GB is free; nothing was changed")
     done = Counter()
     with open(log_path, "w", newline="") as f:
-        f.write(f"# photo-filer log; mode={meta.get('mode')}; dest={meta.get('dest')}; plan={args.plan}\n")
+        f.write(f"# photo-filer log; mode={meta.get('mode')}; source={meta.get('source', '')}; "
+                f"dest={meta.get('dest')}; plan={args.plan}\n")
         w = csv.DictWriter(f, fieldnames=FIELDS + ["status", "error"])
         w.writeheader()
         for r in rows:
-            if r["action"] == "keep":
+            if r["action"] == "keep" or not r["dst"]:
                 continue
             status, err = "done", ""
             try:
@@ -504,9 +641,13 @@ def apply(args):
             done[(r["action"], status)] += 1
     for (action, status), n in sorted(done.items()):
         print(f"  {n:6}  {action} {status}")
-    print(f"  log: {log_path}\n  undo: python3 \"{os.path.abspath(__file__)}\" undo \"{log_path}\"")
+    me = os.path.abspath(__file__)
+    print(f"  log: {log_path}\n  undo: python3 \"{me}\" undo \"{log_path}\"")
     if any(s == "failed" for _, s in done):
+        print(f"  after fixing the cause, try only the failed rows again: python3 \"{me}\" apply \"{log_path}\" --retry")
         sys.exit(1)
+    if not copy:
+        print(f"  folders it emptied (preview, then --run): python3 \"{me}\" prune \"{log_path}\"")
 
 
 def prune_empty(d, stop):
@@ -521,14 +662,47 @@ def prune_empty(d, stop):
         d = os.path.dirname(d)
 
 
+def prune(args):
+    """Remove the source folders an applied move left empty. A folder counts as empty when nothing but
+    .DS_Store (Finder's view settings) is left in it. The source folder itself is kept."""
+    meta, rows = read_log(args.log)
+    if meta.get("mode") == "copy":
+        die("a copy leaves its source folders full; nothing to prune")
+    source = os.path.normpath(meta.get("source") or "")
+    if not source or source == "/":
+        die("this log doesn't say which folder was filed; prune only works on logs from this version")
+    dirs = set()
+    for r in rows:
+        d = os.path.dirname(r["src"])
+        while r["status"] == "done" and d.startswith(source + os.sep):
+            dirs.add(d)
+            d = os.path.dirname(d)
+    gone = []
+    for d in sorted(dirs, key=lambda p: (-p.count(os.sep), p)):  # children before their parents
+        try:
+            left = os.listdir(d)
+        except FileNotFoundError:
+            continue
+        if any(e != ".DS_Store" and os.path.join(d, e) not in gone for e in left):
+            continue
+        if args.run:
+            if ".DS_Store" in left:
+                os.unlink(os.path.join(d, ".DS_Store"))
+            os.rmdir(d)
+        gone.append(d)
+    for d in gone[:15]:
+        print(f"    {os.path.relpath(d, source)}")
+    if len(gone) > 15:
+        print(f"    ...and {len(gone) - 15} more")
+    print(f"  {len(gone)} empty folders {'removed' if args.run else 'would be removed'}")
+    if not args.run and gone:
+        print("  preview only; add --run to do it")
+
+
 def undo(args):
-    with open(args.log, newline="") as f:
-        header = f.readline()
-        if not header.startswith("# photo-filer log"):
-            die(f"{args.log} is not a photo-filer log")
-        meta = dict(kv.split("=", 1) for kv in header[2:].strip().split("; ")[1:])
-        copy = meta.get("mode") == "copy"
-        rows = [r for r in csv.DictReader(f) if r["status"] == "done"]
+    meta, rows = read_log(args.log)
+    copy = meta.get("mode") == "copy"
+    rows = [r for r in rows if r["status"] == "done"]
     result = Counter()
     for r in reversed(rows):
         src, dst = r["src"], r["dst"]
@@ -572,12 +746,17 @@ def main():
     p.add_argument("--plan", help=f"where to write the plan (default: {STATE_DIR}/plan-<time>.csv)")
     p.set_defaults(func=plan)
     p = sub.add_parser("apply", help="carry out a plan exactly")
-    p.add_argument("plan")
+    p.add_argument("plan", help="a plan, or with --retry the log of an applied plan")
+    p.add_argument("--retry", action="store_true", help="try again only the rows that failed in this log")
     p.set_defaults(func=apply)
     p = sub.add_parser("undo", help="reverse an applied plan from its log")
     p.add_argument("log")
     p.add_argument("--run", action="store_true")
     p.set_defaults(func=undo)
+    p = sub.add_parser("prune", help="remove source folders an applied move left empty")
+    p.add_argument("log")
+    p.add_argument("--run", action="store_true")
+    p.set_defaults(func=prune)
     args = ap.parse_args()
     args.func(args)
 
