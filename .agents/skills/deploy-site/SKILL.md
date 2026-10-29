@@ -88,6 +88,10 @@ python3 "$SKILL_DIR/deploy.py" publish <file-or-folder> --slug keen-atlas-7g4f
 
 Only changed files are uploaded. An anonymous site can be updated only from the machine that created it: its claim token is kept in `~/.herenow/sites.json`. A site owned by an account can be updated from anywhere the key is set.
 
+### A site that deletes itself
+
+`--ttl <seconds>` makes the site expire that long after it goes live, whether or not an API key is set. An account's site is otherwise permanent; an anonymous one always lasts 24 hours, so `--ttl 86400` gives the same lifetime either way. A skill that promises a page will disappear passes it and checks that the output says `"persistence": "expiring"`.
+
 ### 4. One-time setup for permanent sites (optional)
 
 Ask the person which email to use. Then:

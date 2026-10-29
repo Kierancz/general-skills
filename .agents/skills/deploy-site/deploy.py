@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Publish a static site to here.now and print where it went.
 
-  deploy.py publish PATH [--slug SLUG] [--title TITLE]
+  deploy.py publish PATH [--slug SLUG] [--title TITLE] [--ttl SECONDS]
   deploy.py login EMAIL
   deploy.py verify EMAIL CODE
   deploy.py claim SLUG
@@ -13,7 +13,8 @@ to stderr. Standard library only, so it runs anywhere python3 does.
 
 The API key, when there is one, comes from $HERENOW_API_KEY or
 ~/.herenow/credentials. Without one the publish is anonymous and the site
-expires in 24 hours unless claimed. The key is never printed.
+expires in 24 hours unless claimed. --ttl makes an account's site expire
+too, SECONDS after it goes live. The key is never printed.
 """
 
 import argparse
@@ -32,6 +33,7 @@ CLIENT = "claude-code/deploy-site"
 HOME = Path.home() / ".herenow"
 CREDENTIALS = HOME / "credentials"
 SITES = HOME / "sites.json"  # slug -> claimToken for anonymous sites we created
+ANONYMOUS_TTL = 24 * 3600  # how long here.now keeps a site published without an account
 
 
 def fail(message, code=1):
@@ -99,8 +101,10 @@ def collect(path):
     return files
 
 
-def publish(path, slug=None, title=None):
+def publish(path, slug=None, title=None, ttl=None):
     key = api_key()
+    if ttl is not None and not key and ttl < ANONYMOUS_TTL:
+        fail(f"an anonymous site always lasts {ANONYMOUS_TTL} seconds; a shorter --ttl needs an account")
     files = collect(path)
     manifest = []
     for rel, f in files:
@@ -114,6 +118,9 @@ def publish(path, slug=None, title=None):
     body = {"files": manifest}
     if title:
         body["displayName"] = title
+    if ttl is not None and key:
+        # Anonymous sites expire on their own; an account's site expires only when told to.
+        body["ttlSeconds"] = ttl
 
     sites = load_sites()
     if slug:
@@ -201,6 +208,8 @@ def main(argv):
     p.add_argument("path")
     p.add_argument("--slug", help="replace this existing site instead of creating one")
     p.add_argument("--title", help="owner-facing site name")
+    p.add_argument("--ttl", type=int, metavar="SECONDS",
+                   help="delete the site this long after it goes live, even on an account (anonymous sites last 86400)")
     sub.add_parser("login", help="email a one-time code").add_argument("email")
     v = sub.add_parser("verify", help="trade the emailed code for an API key")
     v.add_argument("email")
@@ -208,7 +217,9 @@ def main(argv):
     sub.add_parser("claim", help="move an anonymous site into the account").add_argument("slug")
     a = parser.parse_args(argv)
     if a.cmd == "publish":
-        publish(a.path, a.slug, a.title)
+        if a.ttl is not None and a.ttl < 1:
+            fail("--ttl is a number of seconds, at least 1")
+        publish(a.path, a.slug, a.title, a.ttl)
     elif a.cmd == "login":
         login(a.email)
     elif a.cmd == "verify":
