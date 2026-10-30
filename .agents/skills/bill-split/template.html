@@ -320,8 +320,9 @@
 <div class="share-panel" id="share-panel" role="dialog" aria-modal="false" aria-labelledby="share-title" hidden>
   <h2 id="share-title">Share this split</h2>
   <div class="qr" id="share-qr"></div>
-  <p class="fine">Scan with a phone camera to open this calculator with everything filled in as it is now.</p>
-  <div class="row">
+  <p class="fine" id="share-scan">Scan with a phone camera to open this calculator with everything filled in as it is now.</p>
+  <p class="fine" id="share-offline" hidden>This copy has no web address, so there is no link to share. The published page shows its QR code and link here.</p>
+  <div class="row" id="share-row">
     <input class="field" id="share-link" readonly aria-label="Link to this split">
     <button class="btn" type="button" id="copy">Copy</button>
   </div>
@@ -1141,7 +1142,14 @@
   }
 
   const sharePanel = $('share-panel'), scrim = $('scrim');
+  // A page opened from a file or inside a sandboxed frame has no address a friend could open.
+  const onWeb = /^https?:$/.test(location.protocol);
   function fillShare() {
+    if (!onWeb) {
+      ['share-qr', 'share-scan', 'share-row', 'send'].forEach((id) => { $(id).hidden = true; });
+      $('share-offline').hidden = false;
+      return;
+    }
     const link = shareLink();
     $('share-link').value = link;
     $('share-qr').replaceChildren(...(() => {
@@ -1153,7 +1161,7 @@
     sharePanel.hidden = !open;
     scrim.hidden = !open;
     $('share').setAttribute('aria-expanded', String(open));
-    if (open) { fillShare(); $('copy').focus(); } else $('share').focus();
+    if (open) { fillShare(); (onWeb ? $('copy') : $('share-close')).focus(); } else $('share').focus();
   }
   $('share').addEventListener('click', () => openShare(sharePanel.hidden));
   $('share-close').addEventListener('click', () => openShare(false));
