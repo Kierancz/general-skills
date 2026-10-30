@@ -5,6 +5,7 @@ Agent skills that are not tied to any one codebase. Each lives in `.agents/skill
 | Skill | What it does |
 | --- | --- |
 | `address-review` | Triage pull request review comments, fix the valid ones, push |
+| `bill-split` | Itemize the newest receipt in the Mossbear inbox and publish a 24-hour calculator: drag items onto people, add tip and fees, send Venmo requests by link or QR code |
 | `deploy-site` | Put a static page on the public internet with here.now and return its URL |
 | `orchestration` | Split work across subagents and sessions, with a model per subtask |
 | `photo-filer` | File photos and videos into `YEAR/YEAR-MM-DD/` folders with exiftool: plan first, log and undo, duplicates set aside |

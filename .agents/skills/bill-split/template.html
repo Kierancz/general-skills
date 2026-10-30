@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>__TITLE__</title>
+<meta name="description" content="__DESCRIPTION__">
+<meta property="og:title" content="__TITLE__">
+<meta property="og:description" content="__DESCRIPTION__">
+<style>
+  :root {
+    --bg: #f3efe6;
+    --card: #fffdf8;
+    --ink: #1e2421;
+    --muted: #5d6862;
+    --line: #ddd6c8;
+    --accent: #2f6b4a;
+    --accent-soft: #e2efe6;
+    --accent-ink: #ffffff;
+    --warn: #9a4a17;
+    --warn-soft: #fbeadb;
+    --shadow: 0 1px 2px rgba(40, 30, 10, 0.06), 0 6px 20px rgba(40, 30, 10, 0.07);
+    --lift: 0 10px 30px rgba(40, 30, 10, 0.22);
+    --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --num: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    --tone-l: 86%;
+    --tone-ink-l: 22%;
+    --tone-s: 55%;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121614;
+      --card: #1b201d;
+      --ink: #edf1ee;
+      --muted: #9ba7a1;
+      --line: #313a35;
+      --accent: #7cc39a;
+      --accent-soft: #1f3328;
+      --accent-ink: #0b1a11;
+      --warn: #f0a76b;
+      --warn-soft: #36251a;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+      --lift: 0 10px 30px rgba(0, 0, 0, 0.6);
+      --tone-l: 30%;
+      --tone-ink-l: 88%;
+      --tone-s: 35%;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    min-height: 100vh;
+    min-height: 100svh;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.4 var(--ui);
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; background: none; border: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  .num { font-family: var(--num); font-variant-numeric: tabular-nums; }
+  [hidden] { display: none !important; }
+
+  /* ── header ── */
+  header.top { display: flex; align-items: center; gap: 12px; padding: 18px 0 10px; }
+  header.top .title { flex: 1; min-width: 0; }
+  h1 { font-size: 22px; line-height: 1.2; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+  .sub { color: var(--muted); font-size: 14px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+    border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 15px; font-weight: 600;
+  }
+  .pill:hover { border-color: var(--accent); }
+  .pill svg { width: 18px; height: 18px; }
+
+  nav.steps { display: flex; gap: 4px; padding: 4px; margin: 4px 0 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+  nav.steps button { flex: 1; min-height: 38px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  nav.steps button[aria-current="step"] { background: var(--accent); color: var(--accent-ink); }
+
+  /* ── people: the drop targets ── */
+  .people-bar {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    margin: 0 -16px; padding: 8px 16px 10px;
+    border-bottom: 1px solid transparent;
+  }
+  .people-bar.stuck { border-bottom-color: var(--line); }
+  .people { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 2px; }
+  .people::-webkit-scrollbar { display: none; }
+  .person {
+    flex: 0 0 auto; width: 76px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 4px 2px 6px; border-radius: 14px; transition: background 120ms, transform 120ms;
+  }
+  .avatar {
+    --h: 152;
+    width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+    background: hsl(var(--h) var(--tone-s) var(--tone-l)); color: hsl(var(--h) 60% var(--tone-ink-l));
+    font-weight: 700; font-size: 20px; border: 2px solid transparent; transition: transform 140ms, border-color 140ms, box-shadow 140ms;
+  }
+  .person .pname { font-size: 13px; font-weight: 600; max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .person .ptotal { font-size: 12px; color: var(--muted); }
+  .person.payer .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px hsl(var(--h) 40% 50%); }
+  .person.add .avatar, .person.all .avatar { background: transparent; border: 2px dashed var(--line); color: var(--muted); font-size: 24px; font-weight: 500; }
+  .person.all .avatar { font-size: 14px; font-weight: 700; }
+  .person.target .avatar { border-color: var(--accent); }
+  .person.over .avatar { transform: scale(1.14); border-color: var(--accent); box-shadow: 0 0 0 6px var(--accent-soft); }
+  .person.pop .avatar { animation: pop 320ms ease-out; }
+  @media (max-width: 420px) {
+    .person { width: 66px; }
+    .person .pname { max-width: 62px; }
+    .avatar { width: 50px; height: 50px; font-size: 18px; }
+  }
+  @keyframes pop { 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+  .add-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .add-form input { flex: 1 1 140px; }
+  input.field {
+    min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); min-width: 0;
+  }
+  input.field:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+  .btn {
+    min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 600;
+    background: var(--accent); color: var(--accent-ink); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none;
+  }
+  .btn.quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.quiet:hover { border-color: var(--accent); }
+  .link { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; min-height: 32px; }
+
+  .hint { color: var(--muted); font-size: 14px; margin: 10px 0 8px; }
+  .hint strong { color: var(--ink); }
+
+  /* ── the receipt ── */
+  .receipt { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+  .receipt h2, .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 14px 16px 6px; }
+  .items { list-style: none; }
+  .item {
+    position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 16px;
+    border-top: 1px dashed var(--line); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    transition: background 120ms, opacity 120ms;
+  }
+  .item:first-child { border-top: 0; }
+  .item-main { display: flex; align-items: baseline; gap: 10px; text-align: left; width: 100%; min-height: 28px; cursor: grab; touch-action: manipulation; }
+  .item-main .grip { color: var(--muted); opacity: 0.6; font-size: 14px; letter-spacing: -2px; }
+  .item-main .iname { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+  .item-main .unit { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 4px; }
+  .item.unassigned .item-main .iname::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); margin-right: 8px; vertical-align: 2px; }
+  .item.selected { background: var(--accent-soft); }
+  .item.selected .item-main { cursor: pointer; }
+  .item.dragging { opacity: 0.35; }
+  .item.flash { animation: flash 900ms ease-out; }
+  @keyframes flash { 0% { background: var(--warn-soft); } 100% { background: transparent; } }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 22px; }
+  .chip {
+    --h: 152;
+    display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 0 6px 0 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    background: hsl(var(--h) var(--tone-s) var(--tone-l)); color: hsl(var(--h) 60% var(--tone-ink-l));
+  }
+  .chip .x { font-size: 16px; line-height: 1; opacity: 0.7; padding: 0 3px; }
+  .chip:hover .x { opacity: 1; }
+  .chip-note { font-size: 12px; color: var(--muted); align-self: center; }
+  .rest { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--warn-soft); color: var(--warn); font-size: 14px; font-weight: 600; }
+
+  .lines { list-style: none; padding: 4px 16px 14px; }
+  .lines li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--line); flex-wrap: wrap; }
+  .lines li:first-child { border-top: 0; }
+  .lines .label { flex: 1; min-width: 0; }
+  .lines .label small { display: block; color: var(--muted); font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; padding: 2px; gap: 2px; }
+  .seg button { min-height: 34px; padding: 0 10px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .tip-row { width: 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .tip-row .seg { flex-wrap: wrap; }
+  .money-input { display: inline-flex; align-items: center; gap: 4px; }
+  .money-input input { width: 104px; text-align: right; font-family: var(--num); }
+
+  /* ── review and requests ── */
+  .stack { display: grid; gap: 12px; }
+  .card { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); }
+  .who { display: flex; align-items: center; gap: 12px; padding: 14px 16px 4px; }
+  .who .avatar { width: 44px; height: 44px; font-size: 17px; flex: 0 0 auto; }
+  .who .name { flex: 1; min-width: 0; font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
+  .who .name small { display: block; font-weight: 500; font-size: 13px; color: var(--muted); }
+  .who .amount { font-size: 20px; font-weight: 700; }
+  .breakdown { list-style: none; padding: 4px 16px 8px 72px; font-size: 14px; color: var(--muted); }
+  .breakdown li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+  .breakdown li span:first-child { overflow-wrap: anywhere; }
+  .card .edit { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 16px 14px 72px; align-items: center; }
+  .card .edit input { flex: 1 1 150px; }
+  .venmo-field { position: relative; flex: 1 1 150px; display: flex; }
+  .venmo-field::before { content: "@"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .venmo-field input { padding-left: 28px; width: 100%; }
+  .check { padding: 12px 16px; font-size: 14px; color: var(--muted); }
+  .check strong { color: var(--ink); }
+  .payer-pick { padding: 4px 16px 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .payer-pick button { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); font-weight: 600; font-size: 14px; }
+  .payer-pick button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 16px 16px; }
+  .actions .btn { flex: 1 1 auto; }
+  .venmo-btn { background: #008cff; color: #fff; }
+  .note { font-size: 13px; color: var(--muted); padding: 0 16px 12px; }
+  .qr-box { padding: 0 16px 16px; display: grid; justify-items: center; gap: 8px; }
+  .qr { padding: 8px; border-radius: 12px; background: #fff; width: min(240px, 70vw); }
+  .qr svg { display: block; width: 100%; height: auto; }
+  .qr-caption { font-size: 13px; color: var(--muted); text-align: center; max-width: 280px; }
+  .banner { padding: 14px 16px; border-radius: 14px; background: var(--accent-soft); font-size: 15px; }
+  .banner.warn { background: var(--warn-soft); color: var(--warn); }
+
+  /* ── the bar along the bottom ── */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--card); border-top: 1px solid var(--line);
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  }
+  .bar .wrap { display: flex; align-items: center; gap: 12px; }
+  .bar .status { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); }
+  .bar .status strong { display: block; color: var(--ink); font-size: 17px; }
+  .bar .status.warn strong { color: var(--warn); }
+
+  /* ── share panel ── */
+  .scrim { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.35); }
+  .share-panel {
+    position: fixed; z-index: 31; left: 50%; bottom: 0; transform: translateX(-50%);
+    width: min(420px, 100%); max-height: 100svh; overflow-y: auto;
+    background: var(--card); border-radius: 18px 18px 0 0; box-shadow: var(--lift);
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 12px; justify-items: center;
+  }
+  @media (min-width: 640px) {
+    .share-panel { top: 50%; bottom: auto; transform: translate(-50%, -50%); border-radius: 18px; padding-bottom: 18px; }
+  }
+  .share-panel h2 { font-size: 18px; justify-self: start; }
+  .share-panel .row { display: flex; gap: 8px; width: 100%; }
+  .share-panel .row input { flex: 1; font-family: var(--num); font-size: 13px; }
+  .share-panel .fine { font-size: 13px; color: var(--muted); text-align: center; }
+
+  .ghost {
+    position: fixed; left: 0; top: 0; z-index: 40; pointer-events: none;
+    padding: 10px 14px; border-radius: 12px; background: var(--card); box-shadow: var(--lift);
+    font-weight: 600; display: flex; gap: 10px; max-width: 70vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* Held well above the finger, so the circle it is over stays in sight. */
+    transform: translate(-50%, calc(-100% - 44px)) rotate(-2deg); opacity: 0.92;
+  }
+  .toast {
+    position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translate(-50%, 12px);
+    z-index: 35; max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 12px;
+    background: var(--ink); color: var(--bg); font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: opacity 160ms, transform 160ms;
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <h1 id="merchant">__MERCHANT__</h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <button class="pill" id="share" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="share-panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+      Share
+    </button>
+  </header>
+  <noscript><p class="banner warn">This calculator needs JavaScript turned on.</p></noscript>
+  <nav class="steps" aria-label="Steps">
+    <button type="button" data-step="0">1 · Assign</button>
+    <button type="button" data-step="1">2 · Review</button>
+    <button type="button" data-step="2">3 · Request</button>
+  </nav>
+
+  <main>
+    <section id="step-assign">
+      <div class="people-bar" id="people-bar">
+        <div class="people" id="people" role="group" aria-label="People"></div>
+        <form class="add-form" id="add-form" hidden>
+          <input class="field" id="add-name" maxlength="24" autocomplete="off" placeholder="Name" aria-label="Name" required>
+          <span class="venmo-field"><input class="field" id="add-venmo" maxlength="31" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Venmo (optional)" aria-label="Venmo username, optional"></span>
+          <button class="btn" type="submit">Add</button>
+          <button class="btn quiet" type="button" id="add-cancel">Cancel</button>
+        </form>
+      </div>
+      <p class="hint" id="hint"></p>
+      <div class="receipt">
+        <h2>Items</h2>
+        <ul class="items" id="items"></ul>
+        <div class="rest" id="rest" hidden>
+          <span id="rest-text"></span>
+          <button class="link" type="button" id="rest-even">Split them evenly</button>
+        </div>
+      </div>
+      <div class="receipt" style="margin-top: 12px">
+        <h2>Tax, tip and fees</h2>
+        <ul class="lines" id="extras"></ul>
+      </div>
+    </section>
+
+    <section id="step-review" class="stack" hidden></section>
+    <section id="step-requests" class="stack" hidden></section>
+  </main>
+</div>
+
+<div class="bar">
+  <div class="wrap">
+    <p class="status" id="status"></p>
+    <button class="btn" type="button" id="next"></button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="share-panel" id="share-panel" role="dialog" aria-modal="false" aria-labelledby="share-title" hidden>
+  <h2 id="share-title">Share this split</h2>
+  <div class="qr" id="share-qr"></div>
+  <p class="fine">Scan with a phone camera to open this calculator with everything filled in as it is now.</p>
+  <div class="row">
+    <input class="field" id="share-link" readonly aria-label="Link to this split">
+    <button class="btn" type="button" id="copy">Copy</button>
+  </div>
+  <div class="row">
+    <button class="btn quiet" type="button" id="send" style="flex: 1">Send…</button>
+    <button class="btn quiet" type="button" id="share-close" style="flex: 1">Done</button>
+  </div>
+  <p class="fine" id="expiry"></p>
+</div>
+
+<div class="ghost" id="ghost" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="bill">__DATA__</script>
+<script>
+(() => {
+  'use strict';
+  const BILL = JSON.parse(document.getElementById('bill').textContent);
+  const $ = (id) => document.getElementById(id);
+  const MAX_PEOPLE = 20;
+  const VENMO_RE = /^[A-Za-z0-9_-]{5,30}$/;
+  const HUES = [152, 212, 28, 280, 350, 188, 45, 320, 100, 240];
+  const KEY = 'billsplit:' + location.pathname;
+  const venmoWorks = BILL.currency === 'USD';
+  const moneyFmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: BILL.currency });
+  const fmt = (c) => moneyFmt.format(c / 100);
+  const dateText = BILL.date
+    ? new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(BILL.date + 'T12:00:00Z'))
+    : '';
+  const sum = (list) => list.reduce((a, b) => a + b, 0);
+
+  /** Make an element: attributes, then children (strings become text, never HTML). */
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === false || v == null) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'style') el.style.cssText = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid);
+    return el;
+  }
+
+  // ── state, carried in the link so a shared link opens exactly as it was ──
+  function defaults() {
+    return {
+      people: BILL.people.map((p) => ({ name: p.name, venmo: p.venmo || '' })),
+      payer: BILL.payer,
+      assign: BILL.items.map(() => []),
+      tip: { ...BILL.tip },
+      fees: BILL.fees.map((f) => f.split),
+      step: 0,
+    };
+  }
+  function encode(s) {
+    const c = {
+      v: 1,
+      p: s.people.map((p) => (p.venmo ? [p.name, p.venmo] : [p.name])),
+      y: s.payer,
+      a: s.assign,
+      t: [s.tip.mode === 'amount' ? 1 : 0, s.tip.value],
+      f: s.fees.map((x) => (x === 'even' ? 1 : 0)),
+      s: s.step,
+    };
+    let bin = '';
+    new TextEncoder().encode(JSON.stringify(c)).forEach((b) => { bin += String.fromCharCode(b); });
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  /** Read a state back, trusting nothing: a link can be edited by anyone who has it. */
+  function decode(text) {
+    let c;
+    try {
+      const bin = atob(text.replace(/-/g, '+').replace(/_/g, '/'));
+      c = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (ch) => ch.charCodeAt(0))));
+    } catch { return null; }
+    if (!c || c.v !== 1 || !Array.isArray(c.p) || c.p.length < 1 || c.p.length > MAX_PEOPLE) return null;
+    const people = [], seen = new Set();
+    for (const e of c.p) {
+      if (!Array.isArray(e) || typeof e[0] !== 'string') return null;
+      const name = e[0].replace(/\s+/g, ' ').trim().slice(0, 24);
+      if (!name || seen.has(name.toLowerCase())) return null;
+      seen.add(name.toLowerCase());
+      people.push({ name, venmo: typeof e[1] === 'string' && VENMO_RE.test(e[1]) ? e[1] : '' });
+    }
+    const n = people.length;
+    const int = (x, lo, hi) => Number.isInteger(x) && x >= lo && x <= hi;
+    if (!int(c.y, 0, n - 1) || !Array.isArray(c.a) || c.a.length !== BILL.items.length) return null;
+    const assign = c.a.map((list) => (Array.isArray(list) ? [...new Set(list.filter((x) => int(x, 0, n - 1)))] : []));
+    const t = Array.isArray(c.t) && (c.t[0] === 0 || c.t[0] === 1) && Number.isFinite(c.t[1]) && c.t[1] >= 0
+      && (c.t[0] === 1 ? Number.isInteger(c.t[1]) && c.t[1] <= 10_000_000 : c.t[1] <= 100)
+      ? { mode: c.t[0] ? 'amount' : 'percent', value: c.t[1] } : { ...BILL.tip };
+    const fees = BILL.fees.map((f, i) => (Array.isArray(c.f) && (c.f[i] === 0 || c.f[i] === 1) ? (c.f[i] ? 'even' : 'share') : f.split));
+    return { people, payer: c.y, assign, tip: t, fees, step: int(c.s, 0, 2) ? c.s : 0 };
+  }
+  function load() {
+    const fromLink = location.hash.length > 1 ? decode(location.hash.slice(1)) : null;
+    if (fromLink) return fromLink;
+    try { const saved = decode(localStorage.getItem(KEY) || ''); if (saved) return saved; } catch {}
+    return defaults();
+  }
+  let state = load();
+  const shareLink = () => location.origin + location.pathname + '#' + encode(state);
+  function save() {
+    const code = encode(state);
+    try { history.replaceState(null, '', '#' + code); } catch {}
+    try { localStorage.setItem(KEY, code); } catch {}
+  }
+
+  // ── the arithmetic, in whole cents so every share adds back up to the bill ──
+  /** Split `total` cents in proportion to `weights`; leftover cents go to the largest remainders. */
+  function allocate(total, weights) {
+    const out = weights.map(() => 0);
+    if (!total || !weights.length) return out;
+    const sign = Math.sign(total), t = Math.abs(total);
+    let w = weights, wsum = sum(weights);
+    if (wsum <= 0) { w = weights.map(() => 1); wsum = w.length; }
+    const exact = w.map((x) => (t * x) / wsum);
+    let given = 0;
+    exact.forEach((x, i) => { out[i] = Math.floor(x); given += out[i]; });
+    const order = exact.map((x, i) => [x - Math.floor(x), i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+    for (let k = 0; given < t; k++, given++) out[order[k % order.length][1]]++;
+    return out.map((x) => x * sign);
+  }
+  const subtotal = sum(BILL.items.map((i) => i.cents));
+  const tipCents = () => (state.tip.mode === 'amount' ? state.tip.value : Math.round((subtotal * state.tip.value) / 100));
+
+  function compute() {
+    const per = state.people.map(() => ({ items: [], sub: 0, tax: 0, tip: 0, fees: BILL.fees.map(() => 0), total: 0 }));
+    let left = 0, leftCents = 0;
+    BILL.items.forEach((item, i) => {
+      const who = state.assign[i];
+      if (!who.length) { left++; leftCents += item.cents; return; }
+      allocate(item.cents, who.map(() => 1)).forEach((c, k) => {
+        per[who[k]].items.push({ i, cents: c, ways: who.length });
+        per[who[k]].sub += c;
+      });
+    });
+    // Items nobody has yet hold their share of tax and tip back, so the first
+    // person given an item is not handed the whole tax while the rest are open.
+    const weights = [...per.map((p) => p.sub), leftCents];
+    const tip = tipCents();
+    allocate(BILL.tax, weights).slice(0, -1).forEach((c, p) => { per[p].tax = c; });
+    allocate(tip, weights).slice(0, -1).forEach((c, p) => { per[p].tip = c; });
+    BILL.fees.forEach((f, k) => {
+      const parts = state.fees[k] === 'even' ? allocate(f.cents, per.map(() => 1)) : allocate(f.cents, weights).slice(0, -1);
+      parts.forEach((c, p) => { per[p].fees[k] = c; });
+    });
+    per.forEach((p) => { p.total = p.sub + p.tax + p.tip + sum(p.fees); });
+    const grand = subtotal + BILL.tax + tip + sum(BILL.fees.map((f) => f.cents));
+    return { per, left, leftCents, tip, grand };
+  }
+
+  // ── small things ──
+  let toastTimer;
+  function toast(text) {
+    const t = $('toast');
+    t.textContent = text;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 2600);
+  }
+  const hue = (p) => HUES[p % HUES.length];
+  const initials = (name) => name.split(' ').filter(Boolean).slice(0, 2).map((w) => [...w][0].toUpperCase()).join('');
+  const venmoNote = () => [BILL.merchant, dateText].filter(Boolean).join(' · ');
+  /** A Venmo payment link (Venmo's documented txn/recipients/amount/note parameters), spaces as %20, never '+'. */
+  function venmoLink(txn, username, cents) {
+    const q = [`txn=${txn}`, 'audience=private'];
+    if (username) q.push(`recipients=${encodeURIComponent(username)}`);
+    q.push(`amount=${(cents / 100).toFixed(2)}`, `note=${encodeURIComponent(venmoNote())}`);
+    return 'https://venmo.com/?' + q.join('&');
+  }
+  const cleanHandle = (text) => text.trim().replace(/^@/, '');
+
+  // ── assigning ──
+  let selected = null; // an item index picked by tap or keyboard, waiting for a person
+  function assignTo(i, target) {
+    const who = state.assign[i];
+    const item = BILL.items[i];
+    if (target === 'all') {
+      state.assign[i] = state.people.map((_, p) => p);
+      announce(`${item.name} split between everyone`);
+    } else if (who.includes(target)) {
+      toast(`${item.name} is already ${state.people[target].name}’s`);
+      return false;
+    } else {
+      who.push(target);
+      who.sort((a, b) => a - b);
+      announce(who.length > 1
+        ? `${item.name} split ${who.length} ways`
+        : `${item.name} → ${state.people[target].name}`);
+    }
+    const ids = target === 'all' ? state.people.map((_, p) => p) : [target];
+    commit();
+    ids.forEach((p) => {
+      const el = document.querySelector(`.person[data-p="${p}"]`);
+      if (el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+    });
+    return true;
+  }
+  function unassign(i, p) {
+    state.assign[i] = state.assign[i].filter((x) => x !== p);
+    announce(`${BILL.items[i].name} taken off ${state.people[p].name}`);
+    commit();
+  }
+  function announce(text) { toast(text); }
+  function select(i) {
+    selected = selected === i ? null : i;
+    render();
+  }
+  /** After a tap-assign, move on to the next item nobody has, so a table is a quick run of taps. */
+  function advance(from) {
+    const n = BILL.items.length;
+    for (let k = 1; k <= n; k++) {
+      const j = (from + k) % n;
+      if (!state.assign[j].length) return j;
+    }
+    return null;
+  }
+  function personTapped(target) {
+    if (selected == null) {
+      toast('Pick an item first, or drag one onto a person');
+      return;
+    }
+    const i = selected;
+    if (assignTo(i, target)) {
+      selected = advance(i);
+      render();
+      const next = selected == null ? null : document.querySelector(`.item[data-i="${selected}"] .item-main`);
+      if (next) next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  function addPerson(name, venmo) {
+    name = name.replace(/\s+/g, ' ').trim().slice(0, 24);
+    venmo = cleanHandle(venmo);
+    if (!name) return 'Give them a name';
+    if (state.people.some((p) => p.name.toLowerCase() === name.toLowerCase())) return `There’s already a ${name}. Add a last initial.`;
+    if (venmo && !VENMO_RE.test(venmo)) return 'That doesn’t look like a Venmo username';
+    if (state.people.length >= MAX_PEOPLE) return `${MAX_PEOPLE} people is the most this can split between`;
+    state.people.push({ name, venmo });
+    commit();
+    return null;
+  }
+  function removePerson(p) {
+    const name = state.people[p].name;
+    let orphaned = 0;
+    state.assign = state.assign.map((who) => {
+      const kept = who.filter((x) => x !== p).map((x) => (x > p ? x - 1 : x));
+      if (who.length && !kept.length) orphaned++;
+      return kept;
+    });
+    state.people.splice(p, 1);
+    if (state.payer === p) state.payer = 0;
+    else if (state.payer > p) state.payer--;
+    commit();
+    toast(orphaned ? `${name} removed. ${orphaned} item${orphaned === 1 ? '' : 's'} need${orphaned === 1 ? 's' : ''} a person again.` : `${name} removed`);
+  }
+
+  // ── drag and drop, with a pointer so it works the same with a finger or a mouse ──
+  // A finger has to rest on an item for a moment before it lifts, so swiping the list still scrolls.
+  let drag = null;
+  const ghost = $('ghost');
+  function dropTargetAt(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const person = el && el.closest('.person[data-p], .person.all');
+    if (!person) return null;
+    return person.classList.contains('all') ? 'all' : Number(person.dataset.p);
+  }
+  function moveGhost(x, y) {
+    ghost.style.left = x + 'px';
+    ghost.style.top = y + 'px';
+    const target = dropTargetAt(x, y);
+    document.querySelectorAll('.person.over').forEach((el) => el.classList.remove('over'));
+    if (target != null) {
+      const el = target === 'all' ? document.querySelector('.person.all') : document.querySelector(`.person[data-p="${target}"]`);
+      if (el) el.classList.add('over');
+    }
+    drag.target = target;
+  }
+  function liftItem() {
+    drag.lifted = true;
+    const item = BILL.items[drag.i];
+    ghost.replaceChildren(h('span', {}, item.name), h('span', { class: 'num' }, fmt(item.cents)));
+    ghost.hidden = false;
+    drag.row.classList.add('dragging');
+    document.querySelectorAll('.person[data-p], .person.all').forEach((el) => el.classList.add('target'));
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch {} }
+    moveGhost(drag.x, drag.y);
+  }
+  function endDrag(drop) {
+    if (!drag) return;
+    clearTimeout(drag.timer);
+    const { lifted, i, target, row } = drag;
+    drag = null;
+    ghost.hidden = true;
+    row.classList.remove('dragging');
+    document.querySelectorAll('.person.over, .person.target').forEach((el) => el.classList.remove('over', 'target'));
+    if (lifted && drop && target != null) {
+      selected = null;
+      assignTo(i, target);
+    }
+    return lifted;
+  }
+  let suppressClick = false;
+  function onItemPointerDown(e) {
+    if (e.button !== 0 || e.target.closest('.chip')) return;
+    const row = e.currentTarget;
+    drag = { i: Number(row.dataset.i), row, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, lifted: false, target: null, mouse: e.pointerType === 'mouse', id: e.pointerId };
+    if (!drag.mouse) drag.timer = setTimeout(() => { if (drag && !drag.lifted) liftItem(); }, 200);
+  }
+  document.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    const moved = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+    if (!drag.lifted) {
+      if (drag.mouse && moved > 5) liftItem();
+      else if (!drag.mouse && moved > 10) { clearTimeout(drag.timer); drag = null; } // a scroll, not a drag
+      return;
+    }
+    moveGhost(e.clientX, e.clientY);
+  });
+  document.addEventListener('pointerup', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    // A lift ends in no click on the item; the flag lasts only for the click this release may fire.
+    if (endDrag(true)) { suppressClick = true; setTimeout(() => { suppressClick = false; }, 0); }
+  });
+  document.addEventListener('pointercancel', () => endDrag(false));
+  // Once an item is lifted the page must not scroll under the finger.
+  document.addEventListener('touchmove', (e) => { if (drag && drag.lifted) e.preventDefault(); }, { passive: false });
+  document.addEventListener('contextmenu', (e) => { if (e.target.closest('.item')) e.preventDefault(); });
+
+  // ── rendering ──
+  function renderPeople(calc) {
+    const box = $('people');
+    const kids = state.people.map((p, i) => h('button', {
+      type: 'button', class: 'person' + (i === state.payer ? ' payer' : ''), 'data-p': i, 'data-key': 'person-' + i,
+      'aria-label': `${p.name}, ${fmt(calc.per[i].total)}${selected != null ? '. Give them the selected item' : ''}`,
+      onclick: () => personTapped(i),
+    },
+      h('span', { class: 'avatar', style: `--h:${hue(i)}`, 'aria-hidden': 'true' }, initials(p.name)),
+      h('span', { class: 'pname' }, p.name),
+      h('span', { class: 'ptotal num' }, fmt(calc.per[i].total))));
+    if (state.people.length > 1) {
+      kids.push(h('button', { type: 'button', class: 'person all', 'data-key': 'person-all', 'aria-label': 'Everyone: split an item between all', onclick: () => personTapped('all') },
+        h('span', { class: 'avatar', 'aria-hidden': 'true' }, 'ALL'),
+        h('span', { class: 'pname' }, 'Everyone'),
+        h('span', { class: 'ptotal' }, 'split')));
+    }
+    if (state.people.length < MAX_PEOPLE) {
+      kids.push(h('button', { type: 'button', class: 'person add', 'data-key': 'person-add', 'aria-label': 'Add a person', onclick: openAdd },
+        h('span', { class: 'avatar', 'aria-hidden': 'true' }, '+'),
+        h('span', { class: 'pname' }, 'Add'),
+        h('span', { class: 'ptotal' }, ' ')));
+    }
+    box.replaceChildren(...kids);
+  }
+  function renderItems(calc) {
+    const list = $('items');
+    list.replaceChildren(...BILL.items.map((item, i) => {
+      const who = state.assign[i];
+      const parts = allocate(item.cents, who.map(() => 1));
+      const row = h('li', {
+        class: 'item' + (who.length ? '' : ' unassigned') + (selected === i ? ' selected' : ''), 'data-i': i,
+        onpointerdown: onItemPointerDown,
+      },
+        h('button', {
+          type: 'button', class: 'item-main', 'data-key': 'item-' + i, 'aria-pressed': String(selected === i),
+          'aria-label': `${item.name}${item.unit ? ' ' + item.unit : ''}, ${fmt(item.cents)}, ${who.length ? 'with ' + who.map((p) => state.people[p].name).join(' and ') : 'nobody yet'}`,
+          onclick: () => { if (suppressClick) { suppressClick = false; return; } select(i); },
+        },
+          h('span', { class: 'grip', 'aria-hidden': 'true' }, '⋮⋮'),
+          h('span', { class: 'iname' }, item.name, item.unit ? h('span', { class: 'unit' }, item.unit) : null),
+          h('span', { class: 'num' }, fmt(item.cents))),
+        who.length ? h('div', { class: 'chips' },
+          who.map((p, k) => h('button', {
+            type: 'button', class: 'chip', style: `--h:${hue(p)}`, 'data-key': `chip-${i}-${p}`,
+            'aria-label': `Take ${item.name} off ${state.people[p].name}`, onclick: () => unassign(i, p),
+          }, state.people[p].name, who.length > 1 ? h('span', { class: 'num' }, ' ' + fmt(parts[k])) : null, h('span', { class: 'x', 'aria-hidden': 'true' }, '×'))),
+          who.length > 1 ? h('span', { class: 'chip-note' }, `split ${who.length} ways`) : null) : null);
+      return row;
+    }));
+    $('rest').hidden = calc.left === 0 || state.people.length === 0;
+    $('rest-text').textContent = `${calc.left} item${calc.left === 1 ? '' : 's'} left · ${fmt(calc.leftCents)}`;
+    $('hint').replaceChildren(...(selected != null
+      ? [h('strong', {}, BILL.items[selected].name), ' is picked. Tap who had it, or tap it again to let go.']
+      : ['Drag each item onto who had it. Drop it on more than one person to split it. Or tap an item, then a person.']));
+  }
+  const TIP_STEPS = [0, 15, 18, 20, 22];
+  function renderExtras(calc) {
+    const rows = [];
+    const tipInput = h('input', {
+      class: 'field', inputmode: 'decimal', 'aria-label': 'Tip in dollars', 'data-key': 'tip-amount',
+      value: (calc.tip / 100).toFixed(2),
+      onchange: (e) => {
+        const v = Number(e.target.value.replace(/[^0-9.]/g, ''));
+        if (!Number.isFinite(v) || v < 0 || v > 100000) { toast('Enter the tip as an amount, like 12.50'); render(); return; }
+        state.tip = { mode: 'amount', value: Math.round(v * 100) };
+        commit();
+      },
+    });
+    rows.push(h('li', {},
+      h('span', { class: 'label' }, 'Tip', h('small', {}, BILL.tipOnBill
+        ? 'Already on the bill. Split by what each person ordered.'
+        : `On the ${fmt(subtotal)} before tax. Split by what each person ordered.`)),
+      h('span', { class: 'num' }, fmt(calc.tip)),
+      h('div', { class: 'tip-row' },
+        h('div', { class: 'seg', role: 'group', 'aria-label': 'Tip percentage' },
+          TIP_STEPS.map((pct) => h('button', {
+            type: 'button', 'data-key': 'tip-' + pct,
+            'aria-pressed': String(state.tip.mode === 'percent' && state.tip.value === pct),
+            onclick: () => { state.tip = { mode: 'percent', value: pct }; commit(); },
+          }, pct + '%'))),
+        h('label', { class: 'money-input' }, h('span', { class: 'sr' }, 'Custom tip'), h('span', { 'aria-hidden': 'true' }, '$'), tipInput))));
+    if (BILL.tax) {
+      rows.push(h('li', {}, h('span', { class: 'label' }, 'Tax', h('small', {}, 'Split by what each person ordered.')), h('span', { class: 'num' }, fmt(BILL.tax))));
+    }
+    BILL.fees.forEach((f, k) => {
+      rows.push(h('li', {},
+        h('span', { class: 'label' }, f.label, h('small', {}, f.cents < 0 ? 'A discount' : 'A fee')),
+        h('span', { class: 'num' }, fmt(f.cents)),
+        h('div', { class: 'seg', role: 'group', 'aria-label': `How to split ${f.label}` },
+          [['share', 'By order'], ['even', 'Evenly']].map(([mode, label]) => h('button', {
+            type: 'button', 'data-key': `fee-${k}-${mode}`, 'aria-pressed': String(state.fees[k] === mode),
+            onclick: () => { state.fees[k] = mode; commit(); },
+          }, label)))));
+    });
+    rows.push(h('li', {}, h('strong', { class: 'label' }, 'Total with tip'), h('strong', { class: 'num' }, fmt(calc.grand))));
+    $('extras').replaceChildren(...rows);
+  }
+
+  function breakdown(i, calc) {
+    const p = calc.per[i];
+    const lines = p.items.map((x) => h('li', {}, h('span', {}, BILL.items[x.i].name + (x.ways > 1 ? ` (1/${x.ways})` : '')), h('span', { class: 'num' }, fmt(x.cents))));
+    if (p.tax) lines.push(h('li', {}, h('span', {}, 'Tax'), h('span', { class: 'num' }, fmt(p.tax))));
+    if (p.tip) lines.push(h('li', {}, h('span', {}, 'Tip'), h('span', { class: 'num' }, fmt(p.tip))));
+    BILL.fees.forEach((f, k) => { if (p.fees[k]) lines.push(h('li', {}, h('span', {}, f.label), h('span', { class: 'num' }, fmt(p.fees[k])))); });
+    if (!lines.length) lines.push(h('li', {}, h('span', {}, 'Nothing yet')));
+    return h('ul', { class: 'breakdown' }, lines);
+  }
+  function venmoInput(i, label) {
+    return h('span', { class: 'venmo-field' }, h('input', {
+      class: 'field', value: state.people[i].venmo, maxlength: 31, autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false',
+      placeholder: 'Venmo username', 'aria-label': label || `${state.people[i].name}’s Venmo username`, 'data-key': 'venmo-' + i,
+      onchange: (e) => {
+        const v = cleanHandle(e.target.value);
+        if (v && !VENMO_RE.test(v)) { toast('That doesn’t look like a Venmo username'); e.target.value = state.people[i].venmo; return; }
+        state.people[i].venmo = v;
+        commit();
+      },
+    }));
+  }
+  function renderReview(calc) {
+    const cards = [];
+    if (calc.left) {
+      cards.push(h('p', { class: 'banner warn' }, `${calc.left} item${calc.left === 1 ? '' : 's'} (${fmt(calc.leftCents)}) still need${calc.left === 1 ? 's' : ''} a person. `,
+        h('button', { class: 'link', type: 'button', onclick: () => go(0) }, 'Assign them')));
+    }
+    cards.push(h('div', { class: 'card' },
+      h('h2', {}, 'Who paid the bill?'),
+      h('div', { class: 'payer-pick', role: 'group', 'aria-label': 'Who paid' }, state.people.map((p, i) => h('button', {
+        type: 'button', 'data-key': 'payer-' + i, 'aria-pressed': String(state.payer === i),
+        onclick: () => { state.payer = i; commit(); },
+      }, p.name)))));
+    state.people.forEach((p, i) => {
+      cards.push(h('div', { class: 'card' },
+        h('div', { class: 'who' },
+          h('span', { class: 'avatar', style: `--h:${hue(i)}`, 'aria-hidden': 'true' }, initials(p.name)),
+          h('span', { class: 'name' }, p.name, h('small', {}, i === state.payer ? 'Paid the bill' : `Owes ${state.people[state.payer].name}`)),
+          h('span', { class: 'amount num' }, fmt(calc.per[i].total))),
+        breakdown(i, calc),
+        h('div', { class: 'edit' },
+          venmoWorks ? venmoInput(i) : null,
+          state.people.length > 1 ? h('button', { class: 'btn quiet', type: 'button', 'data-key': 'remove-' + i, onclick: () => removePerson(i) }, 'Remove') : null)));
+    });
+    const shares = sum(calc.per.map((p) => p.total));
+    cards.push(h('p', { class: 'check' }, 'Everyone’s shares add up to ', h('strong', { class: 'num' }, fmt(shares)),
+      ` of the ${fmt(calc.grand)} bill with tip` + (shares === calc.grand ? '.' : `; ${fmt(calc.grand - shares)} is on items nobody has yet.`)));
+    $('step-review').replaceChildren(...cards);
+  }
+
+  let qrMode = 'request'; // 'request': the payer scans to send a request; 'pay': a friend scans to pay
+  const openQr = new Set();
+  function qrSvg(text, label) {
+    const m = qrModules(text);
+    if (!m) return h('p', { class: 'qr-caption' }, 'This link is too long for a QR code. Use the button instead.');
+    const quiet = 4, n = m.length + quiet * 2;
+    let d = '';
+    m.forEach((row, y) => row.forEach((on, x) => { if (on) d += `M${x + quiet} ${y + quiet}h1v1h-1z`; }));
+    const box = h('div', { class: 'qr' });
+    // Only numbers go into this markup, so building it as a string is safe.
+    box.innerHTML = `<svg viewBox="0 0 ${n} ${n}" role="img" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#111"/></svg>`;
+    box.firstChild.setAttribute('aria-label', label);
+    return box;
+  }
+  function renderRequests(calc) {
+    const cards = [];
+    const payer = state.people[state.payer];
+    const owed = sum(calc.per.map((p, i) => (i === state.payer ? 0 : p.total)));
+    if (calc.left) {
+      cards.push(h('p', { class: 'banner warn' }, `${calc.left} item${calc.left === 1 ? '' : 's'} still need${calc.left === 1 ? 's' : ''} a person, so these amounts are short. `,
+        h('button', { class: 'link', type: 'button', onclick: () => go(0) }, 'Assign them')));
+    }
+    cards.push(h('p', { class: 'banner' }, `${payer.name} paid ${fmt(calc.grand)} with tip and gets back `, h('strong', { class: 'num' }, fmt(owed)),
+      `. ${payer.name}’s own share is ${fmt(calc.per[state.payer].total)}.`));
+    if (!venmoWorks) {
+      cards.push(h('p', { class: 'banner warn' }, `Venmo only works in US dollars, so there are no Venmo links for a bill in ${BILL.currency}.`));
+    } else {
+      cards.push(h('div', { class: 'card' },
+        h('h2', {}, 'QR codes open'),
+        h('div', { class: 'payer-pick' }, h('div', { class: 'seg', role: 'group', 'aria-label': 'What the QR codes open' },
+          h('button', { type: 'button', 'data-key': 'qr-request', 'aria-pressed': String(qrMode === 'request'), onclick: () => { qrMode = 'request'; render(); } }, `A request, for ${payer.name} to scan`),
+          h('button', { type: 'button', 'data-key': 'qr-pay', 'aria-pressed': String(qrMode === 'pay'), onclick: () => { qrMode = 'pay'; render(); } }, `A payment, for them to scan`))),
+        qrMode === 'pay' && !payer.venmo
+          ? h('div', { class: 'edit', style: 'padding-left: 16px' }, venmoInput(state.payer, `${payer.name}’s Venmo username, to be paid`),
+            h('p', { class: 'note', style: 'padding: 0; width: 100%' }, `Add ${payer.name}’s Venmo username so a friend’s scan opens a payment to the right person.`))
+          : h('p', { class: 'note' }, qrMode === 'request'
+            ? `Scan with ${payer.name}’s phone to open Venmo with the request filled in.`
+            : `Each person scans their own code to open Venmo with a payment to @${payer.venmo} filled in.`)));
+    }
+    state.people.forEach((p, i) => {
+      if (i === state.payer) return;
+      const amount = calc.per[i].total;
+      const card = h('div', { class: 'card' },
+        h('div', { class: 'who' },
+          h('span', { class: 'avatar', style: `--h:${hue(i)}`, 'aria-hidden': 'true' }, initials(p.name)),
+          h('span', { class: 'name' }, p.name, h('small', {}, p.venmo ? '@' + p.venmo : 'No Venmo username')),
+          h('span', { class: 'amount num' }, fmt(amount))),
+        breakdown(i, calc));
+      if (venmoWorks && amount > 0) {
+        const request = venmoLink('charge', p.venmo, amount);
+        const pay = payer.venmo ? venmoLink('pay', payer.venmo, amount) : null;
+        const qrUrl = qrMode === 'pay' ? pay : request;
+        const shown = openQr.has(i) && qrUrl;
+        card.append(...[
+          p.venmo ? null : h('p', { class: 'note' }, `Venmo will ask who to request from. Add ${p.name}’s username to fill it in:`),
+          p.venmo ? null : h('div', { class: 'edit', style: 'padding-top: 0' }, venmoInput(i)),
+          h('div', { class: 'actions' },
+            h('a', { class: 'btn venmo-btn', href: request, rel: 'noopener', 'data-key': 'request-' + i }, `Request ${fmt(amount)} on Venmo`),
+            qrUrl ? h('button', {
+              class: 'btn quiet', type: 'button', 'aria-expanded': String(Boolean(shown)), 'data-key': 'qr-' + i,
+              onclick: () => { if (openQr.has(i)) openQr.delete(i); else openQr.add(i); render(); },
+            }, shown ? 'Hide QR' : 'QR code') : null),
+          shown ? h('div', { class: 'qr-box' },
+            qrSvg(qrUrl, qrMode === 'pay' ? `QR code: pay ${payer.name} ${fmt(amount)} on Venmo` : `QR code: request ${fmt(amount)} from ${p.name} on Venmo`),
+            h('p', { class: 'qr-caption' }, qrMode === 'pay'
+              ? `${p.name} scans this to pay ${payer.name} ${fmt(amount)}.`
+              : `${payer.name} scans this to request ${fmt(amount)} from ${p.name}.`)) : null,
+        ].filter(Boolean));
+      } else if (amount <= 0) {
+        card.append(h('p', { class: 'note' }, `${p.name} doesn’t owe anything.`));
+      }
+      cards.push(card);
+    });
+    if (state.people.length === 1) cards.push(h('p', { class: 'banner' }, 'Add the people who are splitting this to send them requests.'));
+    $('step-requests').replaceChildren(...cards);
+  }
+
+  function summaryText(calc) {
+    const payer = state.people[state.payer];
+    const lines = [`${venmoNote()}: ${fmt(calc.grand)} with tip`];
+    state.people.forEach((p, i) => {
+      if (i !== state.payer) lines.push(`${p.name} owes ${payer.name} ${fmt(calc.per[i].total)}`);
+    });
+    lines.push(`${payer.name} paid; their share is ${fmt(calc.per[state.payer].total)}.`);
+    return lines.join('\n');
+  }
+
+  function renderBar(calc) {
+    const status = $('status'), next = $('next');
+    status.classList.toggle('warn', state.step === 0 && calc.left > 0);
+    if (state.step === 0) {
+      status.replaceChildren(...(calc.left
+        ? [h('strong', {}, `${calc.left} item${calc.left === 1 ? '' : 's'} left`), `${fmt(calc.leftCents)} still to assign`]
+        : [h('strong', { class: 'num' }, fmt(calc.grand)), 'Everything has a person']));
+      next.textContent = 'Review';
+    } else if (state.step === 1) {
+      status.replaceChildren(h('strong', { class: 'num' }, fmt(calc.grand)), 'Total with tip');
+      next.textContent = 'Confirm split';
+    } else {
+      const owed = sum(calc.per.map((p, i) => (i === state.payer ? 0 : p.total)));
+      status.replaceChildren(h('strong', { class: 'num' }, fmt(owed)), `Owed to ${state.people[state.payer].name}`);
+      next.textContent = 'Copy summary';
+    }
+  }
+
+  function render() {
+    const focusKey = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.key : null;
+    const calc = compute();
+    document.querySelectorAll('nav.steps button').forEach((b) => {
+      if (Number(b.dataset.step) === state.step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+    $('step-assign').hidden = state.step !== 0;
+    $('step-review').hidden = state.step !== 1;
+    $('step-requests').hidden = state.step !== 2;
+    if (state.step === 0) { renderPeople(calc); renderItems(calc); renderExtras(calc); }
+    if (state.step === 1) renderReview(calc);
+    if (state.step === 2) renderRequests(calc);
+    renderBar(calc);
+    if (focusKey) {
+      const el = document.querySelector(`[data-key="${CSS.escape(focusKey)}"]`);
+      if (el && el !== document.activeElement) el.focus({ preventScroll: true });
+    }
+  }
+  function commit() { save(); render(); if (!sharePanel.hidden) fillShare(); }
+
+  function go(step) {
+    const calc = compute();
+    if (step === 2 && calc.left) {
+      toast(`${calc.left} item${calc.left === 1 ? '' : 's'} still need${calc.left === 1 ? 's' : ''} a person`);
+      step = 0;
+      flashUnassigned();
+    }
+    selected = null;
+    state.step = step;
+    commit();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function flashUnassigned() {
+    requestAnimationFrame(() => {
+      const rows = document.querySelectorAll('.item.unassigned');
+      rows.forEach((r) => { r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash'); });
+      if (rows[0]) rows[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+  }
+
+  document.querySelectorAll('nav.steps button').forEach((b) => b.addEventListener('click', () => go(Number(b.dataset.step))));
+  $('next').addEventListener('click', async () => {
+    const calc = compute();
+    if (state.step === 0) {
+      if (calc.left) { toast(`${calc.left} item${calc.left === 1 ? '' : 's'} still need${calc.left === 1 ? 's' : ''} a person`); flashUnassigned(); return; }
+      go(1);
+    } else if (state.step === 1) {
+      go(2);
+    } else {
+      try { await navigator.clipboard.writeText(summaryText(calc)); toast('Summary copied'); }
+      catch { toast('Couldn’t copy here'); }
+    }
+  });
+  $('rest-even').addEventListener('click', () => {
+    let n = 0;
+    state.assign = state.assign.map((who) => { if (who.length) return who; n++; return state.people.map((_, p) => p); });
+    commit();
+    toast(`${n} item${n === 1 ? '' : 's'} split between everyone`);
+  });
+
+  // ── adding someone ──
+  const addForm = $('add-form');
+  function openAdd() {
+    addForm.hidden = false;
+    $('add-name').value = '';
+    $('add-venmo').value = '';
+    $('add-name').focus();
+  }
+  $('add-cancel').addEventListener('click', () => { addForm.hidden = true; });
+  addForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const problem = addPerson($('add-name').value, $('add-venmo').value);
+    if (problem) { toast(problem); return; }
+    addForm.hidden = true;
+    toast(`Added ${state.people[state.people.length - 1].name}`);
+  });
+  if (!venmoWorks) $('add-venmo').parentElement.hidden = true;
+
+  // The people stay pinned while the list scrolls; a hairline shows they're floating.
+  const bar = $('people-bar');
+  const sentinel = h('div', { 'aria-hidden': 'true' });
+  bar.before(sentinel);
+  new IntersectionObserver(([e]) => bar.classList.toggle('stuck', !e.isIntersecting)).observe(sentinel);
+
+  // ── share: a QR code drawn here from the page's own address, so no service sees it ──
+  /** The dark modules of a byte-mode QR code at error-correction level M, or null if the text is too long. */
+  function qrModules(text) {
+    const data = [...new TextEncoder().encode(text)];
+    // Per version 1-40 at level M: error-correction codewords per block, and the number of blocks.
+    const ECC = [0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28];
+    const BLOCKS = [0, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49];
+    const rawModules = (v) => {
+      let r = (16 * v + 128) * v + 64;
+      if (v >= 2) { const n = Math.floor(v / 7) + 2; r -= (25 * n - 10) * n - 55; if (v >= 7) r -= 36; }
+      return r;
+    };
+    const capacity = (v) => Math.floor(rawModules(v) / 8) - ECC[v] * BLOCKS[v];
+    let ver = 1;
+    while (ver <= 40 && 4 + (ver < 10 ? 8 : 16) + data.length * 8 > capacity(ver) * 8) ver++;
+    if (ver > 40) return null;
+
+    // The bit stream: byte mode, the length, the bytes, a terminator, then alternating pad bytes.
+    const bits = [];
+    const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+    const cap = capacity(ver) * 8;
+    put(4, 4); put(data.length, ver < 10 ? 8 : 16); data.forEach((b) => put(b, 8));
+    put(0, Math.min(4, cap - bits.length));
+    put(0, (8 - bits.length % 8) % 8);
+    for (let pad = 0xEC; bits.length < cap; pad ^= 0xEC ^ 0x11) put(pad, 8);
+    const words = [];
+    for (let i = 0; i < bits.length; i += 8) words.push(bits.slice(i, i + 8).reduce((a, b) => (a << 1) | b, 0));
+
+    // Reed-Solomon error correction for each block, then the blocks interleaved.
+    const mul = (x, y) => {
+      let z = 0;
+      for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; }
+      return z;
+    };
+    const eccLen = ECC[ver], nBlocks = BLOCKS[ver], raw = Math.floor(rawModules(ver) / 8);
+    const div = new Array(eccLen).fill(0);
+    div[eccLen - 1] = 1;
+    for (let i = 0, root = 1; i < eccLen; i++, root = mul(root, 2)) {
+      for (let j = 0; j < eccLen; j++) { div[j] = mul(div[j], root); if (j + 1 < eccLen) div[j] ^= div[j + 1]; }
+    }
+    const shortLen = Math.floor(raw / nBlocks), nShort = nBlocks - raw % nBlocks;
+    const blocks = [];
+    for (let i = 0, k = 0; i < nBlocks; i++) {
+      const dat = words.slice(k, k + shortLen - eccLen + (i < nShort ? 0 : 1));
+      k += dat.length;
+      const rem = new Array(eccLen).fill(0);
+      for (const b of dat) { const f = b ^ rem.shift(); rem.push(0); div.forEach((c, j) => { rem[j] ^= mul(c, f); }); }
+      if (i < nShort) dat.push(0);
+      blocks.push(dat.concat(rem));
+    }
+    const stream = [];
+    for (let i = 0; i < blocks[0].length; i++) {
+      blocks.forEach((b, j) => { if (i !== shortLen - eccLen || j >= nShort) stream.push(b[i]); });
+    }
+
+    // The fixed patterns: finders, timing lines, alignment marks, format and version bits.
+    const size = ver * 4 + 17;
+    const dark = Array.from({ length: size }, () => new Array(size).fill(false));
+    const fixed = Array.from({ length: size }, () => new Array(size).fill(false));
+    const set = (x, y, on) => { dark[y][x] = on; fixed[y][x] = true; };
+    for (let i = 0; i < size; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+    const finder = (cx, cy) => {
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+        const x = cx + dx, y = cy + dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+        if (x >= 0 && x < size && y >= 0 && y < size) set(x, y, d !== 2 && d !== 4);
+      }
+    };
+    finder(3, 3); finder(size - 4, 3); finder(3, size - 4);
+    if (ver > 1) {
+      const n = Math.floor(ver / 7) + 2, step = Math.floor((ver * 8 + n * 3 + 5) / (n * 4 - 4)) * 2;
+      const pos = [6];
+      for (let p = size - 7; pos.length < n; p -= step) pos.splice(1, 0, p);
+      pos.forEach((x, i) => pos.forEach((y, j) => {
+        if ((i === 0 && j === 0) || (i === 0 && j === n - 1) || (i === n - 1 && j === 0)) return;
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(x + dx, y + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+      }));
+    }
+    const format = (mask) => {
+      let rem = mask; // level M's two bits are 00
+      for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      const b = ((mask << 10) | rem) ^ 0x5412, bit = (i) => ((b >>> i) & 1) === 1;
+      for (let i = 0; i <= 5; i++) set(8, i, bit(i));
+      set(8, 7, bit(6)); set(8, 8, bit(7)); set(7, 8, bit(8));
+      for (let i = 9; i < 15; i++) set(14 - i, 8, bit(i));
+      for (let i = 0; i < 8; i++) set(size - 1 - i, 8, bit(i));
+      for (let i = 8; i < 15; i++) set(8, size - 15 + i, bit(i));
+      set(8, size - 8, true);
+    };
+    format(0);
+    if (ver >= 7) {
+      let rem = ver;
+      for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1F25);
+      const b = (ver << 12) | rem;
+      for (let i = 0; i < 18; i++) {
+        const on = ((b >>> i) & 1) === 1, a = size - 11 + i % 3, c = Math.floor(i / 3);
+        set(a, c, on); set(c, a, on);
+      }
+    }
+
+    // The data, in two-column zigzags from the bottom right, skipping the fixed patterns.
+    let i = 0;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let v = 0; v < size; v++) for (let j = 0; j < 2; j++) {
+        const x = right - j, y = ((right + 1) & 2) === 0 ? size - 1 - v : v;
+        if (!fixed[y][x] && i < stream.length * 8) { dark[y][x] = ((stream[i >>> 3] >>> (7 - (i & 7))) & 1) === 1; i++; }
+      }
+    }
+
+    // Any mask decodes; the one with the fewest long runs, solid blocks and imbalance scans best.
+    const MASKS = [
+      (x, y) => (x + y) % 2, (x, y) => y % 2, (x) => x % 3, (x, y) => (x + y) % 3,
+      (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2, (x, y) => x * y % 2 + x * y % 3,
+      (x, y) => (x * y % 2 + x * y % 3) % 2, (x, y) => ((x + y) % 2 + x * y % 3) % 2,
+    ];
+    const applyMask = (m) => {
+      for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fixed[y][x] && MASKS[m](x, y) === 0) dark[y][x] = !dark[y][x];
+    };
+    const penalty = () => {
+      let p = 0, count = 0;
+      for (let a = 0; a < size; a++) {
+        for (const at of [(b) => dark[a][b], (b) => dark[b][a]]) {
+          let run = 1;
+          for (let b = 1; b <= size; b++) {
+            if (b < size && at(b) === at(b - 1)) run++;
+            else { if (run >= 5) p += run - 2; run = 1; }
+          }
+        }
+      }
+      for (let y = 0; y < size - 1; y++) for (let x = 0; x < size - 1; x++) {
+        const c = dark[y][x];
+        if (c === dark[y][x + 1] && c === dark[y + 1][x] && c === dark[y + 1][x + 1]) p += 3;
+      }
+      for (const row of dark) for (const c of row) count += c;
+      return p + Math.floor(Math.abs(count * 20 - size * size * 10) / (size * size)) * 10;
+    };
+    let best = 0, lowest = Infinity;
+    for (let m = 0; m < 8; m++) {
+      applyMask(m); format(m);
+      const p = penalty();
+      if (p < lowest) { lowest = p; best = m; }
+      applyMask(m);
+    }
+    applyMask(best); format(best);
+    return dark;
+  }
+
+  const sharePanel = $('share-panel'), scrim = $('scrim');
+  function fillShare() {
+    const link = shareLink();
+    $('share-link').value = link;
+    $('share-qr').replaceChildren(...(() => {
+      const box = qrSvg(link, 'QR code for the link to this split');
+      return box.classList.contains('qr') ? [...box.childNodes] : [box];
+    })());
+  }
+  function openShare(open) {
+    sharePanel.hidden = !open;
+    scrim.hidden = !open;
+    $('share').setAttribute('aria-expanded', String(open));
+    if (open) { fillShare(); $('copy').focus(); } else $('share').focus();
+  }
+  $('share').addEventListener('click', () => openShare(sharePanel.hidden));
+  $('share-close').addEventListener('click', () => openShare(false));
+  scrim.addEventListener('click', () => openShare(false));
+  $('share-link').addEventListener('focus', (e) => e.target.select());
+  $('copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(shareLink()); }
+    catch {
+      const f = $('share-link');
+      f.focus(); f.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch {}
+      if (!ok) { toast('Couldn’t copy. The link is selected, so copy it from there.'); return; }
+    }
+    toast('Link copied');
+  });
+  $('send').hidden = !navigator.share;
+  $('send').addEventListener('click', async () => {
+    try { await navigator.share({ title: document.title, url: shareLink() }); }
+    catch (err) { if (err.name !== 'AbortError') toast('Couldn’t open sharing. Copy the link instead.'); }
+  });
+  const gone = new Date(BILL.madeAt + 24 * 3600 * 1000);
+  $('expiry').textContent = `Anyone with the link can see the bill and these names. The page is deleted around ${new Intl.DateTimeFormat(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(gone)}.`;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!sharePanel.hidden) openShare(false);
+    else if (drag) endDrag(false);
+    else if (!addForm.hidden) addForm.hidden = true;
+    else if (selected != null) { selected = null; render(); }
+  });
+
+  $('sub').textContent = [dateText, `${BILL.items.length} item${BILL.items.length === 1 ? '' : 's'}`, fmt(subtotal + BILL.tax + sum(BILL.fees.map((f) => f.cents)) + (BILL.tipOnBill ? BILL.tip.value : 0))].filter(Boolean).join(' · ');
+  save();
+  render();
+})();
+</script>
+</body>
+</html>
