@@ -1,18 +1,20 @@
 ---
 name: screenshot-page
-description: 'Read a screenshot (a chat, a social post, a page of notes, or a photo saved in Mossbear) and turn it into a fun, self-contained HTML page plus a Markdown twin for agents and plain reading. Transcribes the text word for word, keeps who said what, and cuts the pictures inside it out of the original. Use for /screenshot-page, "turn this chat screenshot into a page", "make a page from this image", "transcribe this screenshot", "parse this Mossbear photo", "give me this chat as markdown". Do not use to edit a photo, for a gallery of many images, or to publish a screenshot nobody asked to share.'
+description: 'Read a screenshot (a chat, a social post, a page of notes, or a photo saved in Mossbear) and turn it into a fun, self-contained HTML page plus a Markdown twin for agents and plain reading, saved as two Mossbear artifacts. Transcribes the text word for word, keeps who said what, and cuts the pictures inside it out of the original. Use for /screenshot-page, "turn this chat screenshot into a page", "make a page from this image", "transcribe this screenshot", "parse this Mossbear photo", "give me this chat as markdown". Do not use to edit a photo, for a gallery of many images, or to publish a screenshot nobody asked to share.'
 argument-hint: 'Example: "Make a page from this chat: ~/Desktop/chat.png" or "…from https://app.mossbear.io/artifact/<id>"'
 user-invocable: true
 ---
 
 # Screenshot Page
 
-One image becomes two files:
+One image becomes two Mossbear artifacts, a page and its Markdown twin. Both are private to the person's account, and the dashboard shows them in the inbox:
 
-- **`index.html`**: one file that needs no network. The text is set as real text, so it can be searched, selected and read by a screen reader. A chat becomes bubbles with avatars, names, times, replies and reactions. A post or document becomes headings, paragraphs, lists, quotes and code. Every picture inside the screenshot is a crop of the original, which is embedded once. Viewers can flip to the original, copy or download the Markdown, and switch between light and dark.
-- **`page.md`**: the same content as Markdown, with YAML frontmatter (`title`, `kind`, `source`, `date`, `participants`). Each chat message is a bold name line followed by a quote block, so an agent can split it reliably. When Pillow is installed, the pictures are written to `images/N.png` and linked. Without Pillow, each one is described in place as `*[image: …]*`.
+- **The page** (`index.html`, an `html` artifact): one file that needs no network. The text is set as real text, so it can be searched, selected and read by a screen reader. A chat becomes bubbles with avatars, names, times, replies and reactions. A post or document becomes headings, paragraphs, lists, quotes and code. Every picture inside the screenshot is a crop of the original, which is embedded once. Viewers can flip to the original. The dashboard runs it live in its sandboxed frame and sets light or dark to match.
+- **The Markdown** (`page.md`, a `markdown` artifact): the same content, with YAML frontmatter (`title`, `kind`, `source`, `date`, `participants`, and `page`, the page artifact's link). Each chat message is a bold name line followed by a quote block, so an agent can split it reliably. Pictures are described in place as `*[image: …]*`, because an artifact is one text file.
 
-You do the reading, because you can see the image. The script does the rest: it fetches the image and strips its metadata, checks your transcription, crops the pictures and renders both files. It needs only `python3`. Pillow is optional.
+When the image came from Mossbear, both artifacts cite that photo as their source.
+
+You do the reading, because you can see the image. The script does the rest: it fetches the image and strips its metadata, checks your transcription, crops the pictures, renders both files and saves them. It needs only `python3`. Pillow is needed only when a screenshot is too big to fit in an artifact as-is, and it also writes the crops to files so you can check them.
 
 **Self-contained.** This skill needs nothing else in the repo it sits in. The script and template live next to this file; commands below write `$SKILL_DIR` for that directory.
 
@@ -22,7 +24,7 @@ SKILL_DIR=<the directory containing this SKILL.md>
 
 ## Do Not Use
 
-- **To publish a screenshot without asking.** Chats name other people and show what they said. Making the files is local and private. Putting them online is a separate yes (see step 6).
+- **To publish a screenshot without asking.** Chats name other people and show what they said. Saving to the person's own Mossbear account is private, and asking for this skill is the go-ahead for that. Putting the page on the public internet is a separate yes (see *Sharing it publicly*).
 - **For several screenshots at once.** Make one page per image. If several screenshots are one long scrolled chat, ask first, then transcribe them into a single spec in order. The script embeds one source image, so the page can show only one original.
 - **To "improve" what was said.** This is a transcription. Spelling, slang, typos and emoji stay as written.
 
@@ -113,22 +115,41 @@ python3 "$SKILL_DIR/screenshot_page.py" build "$OUT/spec.json" --out "$OUT"
 
 Check that the output says `"ok": true`. A bad spec stops with the field that is wrong; fix that field and run the command again.
 
-**Check the crops.** If `crops` lists files, read each one and confirm it frames the picture and nothing else. Nudge the box and rebuild if it doesn't. If `cropsSkipped` is true, Pillow is missing (`pip install pillow` adds it). In that case, look at the page instead: a browser screenshot of `index.html` (Playwright is fine) shows the crops as the page draws them.
+The build targets a Mossbear artifact by default:
 
-### 5. Hand it over
+- **The page must fit Mossbear's 256 KiB limit on an artifact.** A screenshot that is too big is re-encoded as a smaller JPEG; the `image` field in the output says how. That needs Pillow. Without it, the build stops and says so.
+- **Copy, Download and the theme switch are left out.** The dashboard's frame allows no clipboard and no downloads, and it sets the theme itself. Links in the page don't navigate there either; the address stays readable as text.
 
-Give the person both paths and the first few lines of `page.md`. Mention anything you listed under `unclear`. Offer to change the title, summary or colour; the build takes seconds.
+**Check the crops.** If `crops` lists files, read each one and confirm it frames the picture and nothing else. Nudge the box and rebuild if it doesn't. If `cropsSkipped` is true, Pillow is missing (`pip install pillow` adds it). In that case, look at the page instead.
 
-### 6. Share only on request
+**To see the page as the dashboard will show it**, run `mossbear artifacts preview --file "$OUT/index.html"` and open the URL it prints with a browser tool. It serves the page in the same sandboxed frame. Add `--theme dark` to check dark mode.
 
-The page embeds the whole original screenshot, because "Show original" displays it. Before the page goes anywhere public:
+### 5. Save to Mossbear
+
+```bash
+python3 "$SKILL_DIR/screenshot_page.py" save --out "$OUT" [--bundle <slug>]
+```
+
+- This uses the credential the Mossbear CLI already has, as `fetch` does. Pass `--bundle` only if the person names one, or if their credential is limited to bundles (the error says so).
+- **The page is saved first, then the Markdown,** which carries the page's link in its frontmatter. The output gives each artifact's `url`.
+- **The ids are recorded in `$OUT/saved.json`.** Running `save` again after a change (a new title, a fixed crop, a corrected word) updates the same two artifacts. It does not make new ones. If the person edited one in the dashboard in the meantime, the update is refused rather than overwriting their edit. Read what they changed before going on.
+- **A network error leaves the outcome unknown.** The script says so and does not retry. Check the inbox (`list_artifacts` with `inbox: true`) before running it again, or there may be two copies.
+- **If the Mossbear CLI isn't logged in on this machine,** but the Mossbear MCP tools are available, call `create_artifact` twice: once with `content` from `index.html` and `format: "html"`, then once with `page.md` and `format: "markdown"`. If the source was a Mossbear photo, pass `sources: [{"artifactId": "<photo id>"}]`. Note that `mossbear artifacts create` cannot set the format, so it would save the page as Markdown.
+
+### 6. Hand it over
+
+Give the person both links and the first few lines of the Markdown. Mention anything you listed under `unclear`. Offer to change the title, summary or colour; a rebuild and save take seconds.
+
+## Sharing it publicly
+
+Only on request. The page embeds the whole original screenshot, because "Show original" displays it. Before the page goes anywhere public:
 
 - Say plainly whose names and messages are in it.
 - Offer to replace other people's names with initials or "Friend", and to leave out the original. To leave it out, crop the source to the pictures that are kept, or say the original view will show everything.
-- Publish only after a clear yes, with the `deploy-site` skill if it is installed: `python3 <deploy-site>/deploy.py publish "$OUT" --title "<title>"`. The folder deploys as-is.
+- Rebuild with `--target file` into a fresh folder. That keeps the full-resolution image and the Copy, Download and theme buttons, which work on an ordinary website. Then publish after a clear yes, with the `deploy-site` skill if it is installed: `python3 <deploy-site>/deploy.py publish "$OUT" --title "<title>"`. With `--target file`, `page.md` links the crop files in `images/`, so the folder deploys as-is.
 
 ## What the Page Is
 
-The page is `template.html` with the content filled in, and its CSS and script are inline. It loads no fonts, scripts or images from anywhere, so it works offline, from an email attachment, or from a USB stick. All transcribed text is HTML-escaped. Only `http(s)` links are made clickable, and they open with `rel="noopener noreferrer"`. The page follows the viewer's light or dark setting, has a manual toggle (remembered in that browser only), works by keyboard, turns off the bubble animations for people who ask for reduced motion, and prints cleanly.
+The page is `template.html` with the content filled in, and its CSS and script are inline. It loads no fonts, scripts or images from anywhere. That is why it runs unchanged in Mossbear's frame, which blocks remote images and every connection, and why a `--target file` copy works offline, from an email attachment, or from a USB stick. All transcribed text is HTML-escaped. Only `http(s)` links are made clickable, and they open with `rel="noopener noreferrer"`. The page follows the viewer's light or dark setting (in Mossbear, the dashboard's), has a manual toggle in the `file` build (remembered in that browser only), works by keyboard, turns off the bubble animations for people who ask for reduced motion, and prints cleanly.
 
 Change the look in `template.html`, never in a generated copy.

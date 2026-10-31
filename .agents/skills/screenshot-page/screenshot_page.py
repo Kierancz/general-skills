@@ -3,7 +3,8 @@
 self-contained HTML page and a Markdown twin.
 
   screenshot_page.py fetch IMAGE --out DIR
-  screenshot_page.py build SPEC.json --out DIR
+  screenshot_page.py build SPEC.json --out DIR [--target mossbear|file]
+  screenshot_page.py save --out DIR [--bundle SLUG]
 
 `fetch` takes a local .jpg/.png, or a Mossbear photo by id or artifact URL
 (…/artifact/<id>), and writes DIR/source.<ext> with every metadata block
@@ -19,7 +20,19 @@ in SKILL.md) and writes:
   DIR/images/     the crops as files, when Pillow is installed (Markdown links
                   them; without Pillow it describes them instead)
 
-Both commands print one JSON object. Standard library only; Pillow optional.
+`--target mossbear` (the default) builds for a Mossbear artifact: the page must
+fit Mossbear's 256 KiB content limit, so the image is re-encoded smaller
+(Pillow needed when it is too big); buttons the dashboard's sandboxed frame
+cannot run are left out; and the Markdown describes pictures instead of linking
+files an artifact cannot carry. `--target file` keeps the full image and every
+button, for a page opened from disk or deployed.
+
+`save` creates two artifacts in the person's Mossbear account, the page
+(format html) and the Markdown, each citing the source photo when it came
+from Mossbear. It records them in DIR/saved.json, and a second run updates the
+same two artifacts instead of making new ones.
+
+Every command prints one JSON object. Standard library only; Pillow optional.
 """
 
 import argparse
@@ -28,6 +41,7 @@ import html
 import json
 import os
 import re
+import secrets
 import struct
 import sys
 import urllib.error
@@ -63,6 +77,11 @@ def mossbear_id(image):
 
 def api_get(path):
     """GET a Mossbear dashboard API path with the credential the CLI already has."""
+    return api_call("GET", path)
+
+
+def api_call(method, path, body=None):
+    """Call the Mossbear dashboard API with the credential the CLI already has; returns the body."""
     try:
         config = json.loads((Path.home() / ".mossbear" / "config.json").read_text())
     except (OSError, ValueError):
@@ -71,12 +90,23 @@ def api_get(path):
     if not token:
         fail("no Mossbear credential here: run `mossbear login`, or pull the photo to disk and pass its path")
     base = (os.environ.get("MOSSBEAR_DASHBOARD_URL", "").strip() or config.get("dashboardUrl") or DEFAULT_DASHBOARD).rstrip("/")
-    req = urllib.request.Request(f"{base}{path}")
+    data = None if body is None else json.dumps(body).encode()
+    req = urllib.request.Request(f"{base}{path}", data=data, method=method)
     req.add_header("Authorization", f"Bearer {token}")
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
     # Cloudflare in front of the dashboard refuses urllib's default User-Agent (error 1010).
     req.add_header("User-Agent", "screenshot-page-skill/1")
     with urllib.request.urlopen(req, timeout=60) as res:
         return res.read()
+
+
+def dashboard_base():
+    try:
+        config = json.loads((Path.home() / ".mossbear" / "config.json").read_text())
+    except (OSError, ValueError):
+        config = {}
+    return (os.environ.get("MOSSBEAR_DASHBOARD_URL", "").strip() or config.get("dashboardUrl") or DEFAULT_DASHBOARD).rstrip("/")
 
 
 def fetch_mossbear(item_id):
@@ -218,6 +248,8 @@ def cmd_fetch(image, out):
         old.unlink()
     dest = out / f"source.{ext}"
     dest.write_bytes(data)
+    # `save` cites the photo this page was made from.
+    (out / "fetch.json").write_text(json.dumps({"mossbearId": item_id}))
     print(json.dumps({
         "ok": True,
         "source": str(dest),
@@ -516,15 +548,43 @@ def write_crops(spec, source, out):
     return crops
 
 
-def cmd_build(spec_path, out):
+MAX_ARTIFACT_BYTES = 256 * 1024  # Mossbear's limit on an artifact's content
+
+
+def fit_image(data, budget):
+    """The image re-encoded so its base64 fits `budget` bytes: (data, mime, note)."""
+    mime = "image/png" if data[:4] == b"\x89PNG" else "image/jpeg"
+    if len(data) * 4 // 3 + 4 <= budget:
+        return data, mime, None
+    try:
+        import io
+        from PIL import Image, ImageOps
+    except ImportError:
+        fail(f"the image is {len(data) // 1024} KiB, too big for a Mossbear artifact once inlined; "
+             "install Pillow (`pip install pillow`) so it can be shrunk, or build with --target file")
+    img = ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("RGB")
+    for width in (1200, 1000, 860, 720, 600, 480, 400):
+        scaled = img if img.width <= width else img.resize((width, round(img.height * width / img.width)), Image.LANCZOS)
+        for quality in (82, 72, 62, 52):
+            buf = io.BytesIO()
+            scaled.save(buf, "JPEG", quality=quality, optimize=True, progressive=True)
+            if buf.tell() * 4 // 3 + 4 <= budget:
+                return buf.getvalue(), "image/jpeg", f"re-encoded to {scaled.width}px JPEG q{quality}"
+    fail("even at 400px the image does not fit in a Mossbear artifact; build with --target file and deploy it instead")
+
+
+def cmd_build(spec_path, out, target):
     spec = load_spec(spec_path)
     out.mkdir(parents=True, exist_ok=True)
     source = find_source(out, spec_path, spec)
     data = source.read_bytes()
     size = image_size(data)
-    mime = "image/png" if data[:4] == b"\x89PNG" else "image/jpeg"
     crops = write_crops(spec, source, out)
-    markdown = render_markdown(spec, crops)
+    # An artifact is one text file, so its Markdown cannot link crop files.
+    markdown = render_markdown(spec, crops if target == "file" else {})
+    # The image goes in last, once the rest of the page is measured; a random
+    # marker holds its place so no transcribed text can be mistaken for it.
+    sentinel = f"@@image-{secrets.token_hex(8)}@@"
     kind_label = {"chat": "chat", "post": "post", "document": "page", "photo": "photo", "other": "screenshot"}[spec["kind"]]
     sub = " · ".join(esc(s) for s in (spec.get("source"), spec.get("date")) if s)
     people = "".join(
@@ -542,22 +602,106 @@ def cmd_build(spec_path, out):
         "BLOCKS": render_blocks(spec, size),
         "UNCLEAR": f'<section class="unclear"><h2>Couldn’t read</h2><ul>{unclear}</ul></section>' if unclear else "",
         "ACCENT": esc(spec.get("accent") or "#2f9e6b"),
-        "SRC": f"data:{mime};base64,{base64.b64encode(data).decode()}",
+        "SRC": sentinel,
         "ORIGINAL": f'<div class="crop src" role="img" aria-label="The original screenshot" style="{crop_style([0, 0, 1, 1], size)}"></div>',
-        "MARKDOWN": esc(markdown),
+        # Only Copy and Download read it, and a Mossbear page has neither.
+        "MARKDOWN": esc(markdown) if target == "file" else "",
+        # The dashboard's frame grants no clipboard or downloads, and sets the theme itself.
+        "TOOLS_CLASS": "in-mossbear" if target == "mossbear" else "",
     }
     # One pass, so a transcribed "{{...}}" in the text is never itself replaced.
     page = re.sub(r"\{\{([A-Z_]+)\}\}", lambda m: values.get(m.group(1), m.group(0)), TEMPLATE.read_text())
+    note = None
+    if target == "mossbear":
+        data, mime, note = fit_image(data, MAX_ARTIFACT_BYTES - len(page.encode()) - 64)
+    else:
+        mime = "image/png" if data[:4] == b"\x89PNG" else "image/jpeg"
+    page = page.replace(sentinel, f"data:{mime};base64,{base64.b64encode(data).decode()}", 1)
     (out / "index.html").write_text(page)
     (out / "page.md").write_text(markdown)
+    (out / "build.json").write_text(json.dumps({"title": spec["title"], "target": target}))
     print(json.dumps({
         "ok": True,
+        "target": target,
         "html": str(out / "index.html"),
         "markdown": str(out / "page.md"),
         "crops": [str(out / c) for c in crops.values()],
         "cropsSkipped": not crops and any(b["type"] == "image" or b.get("image") for b in spec["blocks"]),
         "htmlBytes": len(page.encode()),
+        "image": note or "embedded as is",
     }, indent=2))
+
+
+# ── saving to Mossbear ───────────────────────────────────────────────────────
+
+def api_json(method, path, body, what):
+    try:
+        return json.loads(api_call(method, path, body))
+    except urllib.error.HTTPError as err:
+        detail = ""
+        try:
+            detail = json.loads(err.read()).get("error") or ""
+        except (ValueError, AttributeError):
+            pass
+        if err.code == 409:
+            fail(f"{what}: the artifact changed in Mossbear since it was saved here ({detail or 'version conflict'}); "
+                 "read it, or delete saved.json to save fresh copies")
+        fail(f"{what} -> HTTP {err.code}{': ' + detail if detail else ''}")
+    except urllib.error.URLError as err:
+        # A create may have landed even though the reply was lost; never retry blindly.
+        fail(f"{what}: {err.reason}. It may or may not have been saved: check the Mossbear inbox before running save again")
+
+
+def save_one(saved, key, name, content, fmt, sources, bundle):
+    prior = saved.get(key)
+    if prior:
+        body = {"content": content, "name": name, "expectedVersion": prior["version"]}
+        result = api_json("PUT", f"/api/v1/artifacts/{prior['id']}", body, f"updating the {key}")
+    else:
+        body = {"name": name, "content": content, "format": fmt}
+        if bundle:
+            body["bundle"] = bundle
+        if sources:
+            body["sources"] = sources
+        result = api_json("POST", "/api/v1/artifacts", body, f"creating the {key}")
+    artifact = result.get("artifact") or {}
+    if not artifact.get("id"):
+        fail(f"saving the {key}: the reply named no artifact; check the Mossbear inbox before running save again")
+    saved[key] = {"id": artifact["id"], "version": artifact.get("version"),
+                  "url": f"{dashboard_base()}/artifact/{artifact['id']}", "created": not prior}
+    return saved[key]
+
+
+def cmd_save(out, bundle):
+    try:
+        build = json.loads((out / "build.json").read_text())
+        page = (out / "index.html").read_text()
+        markdown = (out / "page.md").read_text()
+    except (OSError, ValueError):
+        fail("nothing built here yet: run `build` into this --out folder first")
+    if build.get("target") != "mossbear":
+        fail("this page was built with --target file; rebuild with --target mossbear before saving")
+    for label, text in (("page", page), ("markdown", markdown)):
+        if len(text.encode()) > MAX_ARTIFACT_BYTES:
+            fail(f"the {label} is {len(text.encode()) // 1024} KiB, over Mossbear's 256 KiB limit")
+    try:
+        source_id = json.loads((out / "fetch.json").read_text()).get("mossbearId")
+    except (OSError, ValueError):
+        source_id = None
+    sources = [{"artifactId": source_id}] if source_id else None
+    saved_path = out / "saved.json"
+    try:
+        saved = json.loads(saved_path.read_text())
+    except (OSError, ValueError):
+        saved = {}
+    title = build["title"][:180]
+    html_item = save_one(saved, "page", f"{title}.html", page, "html", sources, bundle)
+    saved_path.write_text(json.dumps(saved, indent=2))
+    # The Markdown names its page, so an agent that reads one can find the other.
+    linked = markdown.replace("transcribed-from: screenshot\n", f"transcribed-from: screenshot\npage: {html_item['url']}\n", 1)
+    md_item = save_one(saved, "markdown", f"{title}.md", linked, "markdown", sources, bundle)
+    saved_path.write_text(json.dumps(saved, indent=2))
+    print(json.dumps({"ok": True, "page": html_item, "markdown": md_item, "sourcePhoto": source_id}, indent=2))
 
 
 def main(argv):
@@ -569,11 +713,17 @@ def main(argv):
     b = sub.add_parser("build", help="write index.html and page.md from a spec")
     b.add_argument("spec")
     b.add_argument("--out", required=True, type=Path)
+    b.add_argument("--target", choices=["mossbear", "file"], default="mossbear")
+    s = sub.add_parser("save", help="create (or update) the page and Markdown as Mossbear artifacts")
+    s.add_argument("--out", required=True, type=Path)
+    s.add_argument("--bundle", help="bundle slug to file both artifacts into")
     args = parser.parse_args(argv)
     if args.cmd == "fetch":
         cmd_fetch(args.image, args.out.expanduser())
+    elif args.cmd == "build":
+        cmd_build(args.spec, args.out.expanduser(), args.target)
     else:
-        cmd_build(args.spec, args.out.expanduser())
+        cmd_save(args.out.expanduser(), args.bundle)
 
 
 if __name__ == "__main__":

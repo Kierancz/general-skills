@@ -75,6 +75,7 @@ h1 span {
 }
 .tools button:hover { transform: translateY(-1px); border-color: var(--accent); }
 .tools button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.tools.in-mossbear #copy, .tools.in-mossbear #save, .tools.in-mossbear #theme { display: none; }
 .tools button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* card */
@@ -170,7 +171,7 @@ footer { text-align: center; color: var(--soft); font-size: 12px; margin-top: 22
     {{SUMMARY}}
     {{PEOPLE}}
   </header>
-  <nav class="tools" aria-label="Page tools">
+  <nav class="tools {{TOOLS_CLASS}}" aria-label="Page tools">
     <button type="button" id="orig" aria-pressed="false">Show original</button>
     <button type="button" id="copy">Copy as Markdown</button>
     <button type="button" id="save">Download .md</button>
