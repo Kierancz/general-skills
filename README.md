@@ -9,6 +9,7 @@ Agent skills that are not tied to any one codebase. Each lives in `.agents/skill
 | `orchestration` | Split work across subagents and sessions, with a model per subtask |
 | `photo-filer` | File photos and videos into `YEAR/YEAR-MM-DD/` folders with exiftool: plan first, log and undo, duplicates set aside |
 | `reddit-rss` | Pull public Reddit posts and comments to JSONL through RSS, no API key |
+| `screenshot-page` | Read a chat screenshot or Mossbear photo and turn it into a self-contained HTML page and a Markdown twin |
 | `skill-creator` | Create, test and tune skills |
 | `skill-eval` | Judge whether someone else's skill is worth adopting, adapting or ignoring, including a read of every script it ships |
 | `skill-search` | Find existing skills, plugins and tools for a task across this machine, plugin marketplaces, skills.sh and GitHub |
