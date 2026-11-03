@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: 'Coordinate work using the current platform''s available subagents, separate sessions, and messaging tools. Choose Haiku for Claude and Luna for Codex by default, escalating only for complicated subtasks. Use for /orchestration, "orchestrate this", "delegate the work", "split this into subagents", or requests to coordinate several tasks. Do not use for a trivial task better handled directly or by a deterministic script.'
+description: 'Coordinate work using the current platform''s available subagents, separate sessions, and messaging tools. Choose Haiku for Claude and Luna for Codex by default, escalating only for complicated subtasks. Use for /orchestration, "orchestrate this", "split this into subagents", "fan this out across sessions", or requests to coordinate several tasks. Do not use for a trivial task better handled directly or by a deterministic script, or to hand one bounded task to a cheap scout model (use a `delegate` skill where the repository has one).'
 metadata:
   mossbear-id: 14cda08e-4ba2-483f-bb4b-ac3ad492b3c1
 ---
@@ -151,6 +151,12 @@ do not promise two-way communication.
    user input. Report the result, verification, any model escalation or fallback,
    and remaining blockers. Delegation does not expand authorization to publish,
    merge, deploy, or contact people.
+   Before the report says a check-in stopped or a PR subscription ended, end it:
+   cancel each scheduled wake you armed (`delete_trigger` on its id, or the
+   platform's equivalent) and call `unsubscribe_pr_activity` for each PR you
+   subscribed to, then confirm with `list_triggers`. A wake you never cancelled
+   is still armed, whatever the report says; if one could not be ended, name it
+   as still running.
 
 ## Routing examples
 
