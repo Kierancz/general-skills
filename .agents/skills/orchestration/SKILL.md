@@ -1,6 +1,6 @@
 ---
 name: orchestration
-description: 'Coordinate work using the current platform''s available subagents, separate sessions, and messaging tools. Choose Haiku for Claude and Luna for Codex by default, escalating only for complicated subtasks. Use for /orchestration, "orchestrate this", "split this into subagents", "fan this out across sessions", or requests to coordinate several tasks. Do not use for a trivial task better handled directly or by a deterministic script, or to hand one bounded task to a cheap scout model (use a `delegate` skill where the repository has one).'
+description: 'Coordinate work using the current platform''s available subagents, separate sessions, and messaging tools. Choose Haiku for Claude and Luna for Codex by default; on Claude, escalate complicated subtasks to Opus and raise its effort, with no Sonnet tier. Use for /orchestration, "orchestrate this", "split this into subagents", "fan this out across sessions", or requests to coordinate several tasks. Do not use for a trivial task better handled directly or by a deterministic script, or to hand one bounded task to a cheap scout model (use a `delegate` skill where the repository has one).'
 metadata:
   mossbear-id: 14cda08e-4ba2-483f-bb4b-ac3ad492b3c1
 ---
@@ -16,7 +16,7 @@ scope, dependencies, and integration.
 
 | Coordinating runtime | Default delegated model | Complicated work |
 | --- | --- | --- |
-| Claude | Haiku (`model: "haiku"` when supported) | Sonnet for complex implementation; Opus for the hardest reasoning, architecture, or security decisions |
+| Claude | Haiku (`model: "haiku"` when supported) | Opus (`model: "opus"`), with effort set to the work: low for small judgment calls and work Haiku could not land, medium for complex implementation, high or xhigh for the hardest reasoning, architecture, or security decisions |
 | Codex | Luna (`model: "gpt-6-luna"` when offered) | An available stronger Sol model for complex implementation; Astra or the strongest available reasoning model for the hardest decisions |
 
 These defaults apply to native delegation of routine implementation from settled
@@ -27,12 +27,20 @@ cheap scout route when one exists (below). Choose explicitly: do not let a child
 inherit a stronger parent model merely because the model argument was omitted.
 A large project or many files does not, by itself, make every subtask complicated.
 
+On Claude there is no Sonnet tier. Haiku costs a small fraction of either
+larger model, so routine work stays there. For the rest, Opus at low effort
+often matches Sonnet at high effort for a similar cost per finished task. Opus
+at low effort is the first step up from Haiku, not a replacement for it: work
+Haiku can finish stays on Haiku.
+
 Escalate a subtask when it requires unresolved architectural choices,
 security-sensitive judgment, difficult debugging across interacting systems,
 or reasoning about ambiguous requirements with expensive failure consequences.
 Also escalate when a smaller-model attempt exposes a reasoning gap that remains
 after clarifying the brief. Explain the concrete reason in one sentence before
-dispatching a stronger model. Keep routine portions on Haiku or Luna even when
+dispatching a stronger model. On Claude the ladder is Haiku, then Opus at low
+effort, then Opus at medium, then high or xhigh: once a subtask is on Opus,
+escalate by raising its effort, not by changing model. Keep routine portions on Haiku or Luna even when
 another portion needs a stronger model.
 
 Use the model identifiers and selection mechanism actually available in the
@@ -51,7 +59,8 @@ Set the reasoning effort with the model, in every child. Where the tool takes
 an effort parameter, pass it; where it does not, as with `create_session`, put
 it in the opening line of the initial prompt. Low for mechanical work, the
 default for implementation, high for anything that decides, matching the tiers
-above. A child left to its default spends a frontier session's effort on a
+above. On Claude, effort is part of the tier: Opus runs at medium when effort
+is omitted, so a child meant for Opus at low effort must be told so. A child left to its default spends a frontier session's effort on a
 rename, or a rename's on a design call.
 
 ## Choose the coordination method
@@ -161,11 +170,14 @@ do not promise two-way communication.
 ## Routing examples
 
 - Claude: update documentation for an already specified behavior → Haiku.
+- Claude: triage review comments or write a PR body → Opus at low effort.
+- Claude: implement a feature that spans several interacting modules → Opus at
+  medium effort.
 - Codex: add tests and a straightforward fix with clear acceptance criteria → Luna.
 - Claude: implement two independent features requiring their own running stacks →
   separate sessions with verified container isolation; message each session with
   its scope and coordinate the results. Choose the model per feature's complexity.
 - Either runtime: investigate an intermittent race across several services →
-  stronger model for diagnosis; keep independent log summaries on Haiku or Luna.
+  stronger model for diagnosis (on Claude, Opus at high effort); keep independent log summaries on Haiku or Luna.
 - Either runtime: choose a new authorization boundary → stronger reasoning model;
   the coordinator reviews the decision before implementation proceeds.
