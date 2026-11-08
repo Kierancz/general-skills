@@ -1,0 +1,49 @@
+{
+  "$comment": "Delegation tiers: a tier is a name for an OpenRouter slug and the routing it runs with. The launcher writes each tier's options into the OpenCode config it generates, and refuses a tier whose options lack a reasoning object, a provider object, or stated routing (provider.sort, or a provider.order list). A tier change is a one-line edit backed by eval numbers, never by the date on a listing. budgetUsd is the per-run default a brief's budget_usd overrides. `max` has no slug yet: a brief that names it is refused. A project can replace this whole file with its own .delegate/tiers.json.",
+  "defaultTier": "flash",
+  "tiers": {
+    "flash": {
+      "slug": "z-ai/glm-5.3-flash",
+      "budgetUsd": 0.5,
+      "options": {
+        "reasoning": { "effort": "high" },
+        "provider": {
+          "quantizations": ["fp8"],
+          "sort": "price",
+          "allow_fallbacks": true,
+          "preferred_min_throughput": 30,
+          "preferred_max_latency": 20
+        }
+      }
+    },
+    "flash-alt": {
+      "slug": "deepseek/deepseek-v4-flash-0731",
+      "budgetUsd": 0.5,
+      "options": {
+        "reasoning": { "effort": "high" },
+        "provider": {
+          "quantizations": ["fp8"],
+          "sort": "price",
+          "allow_fallbacks": true,
+          "preferred_min_throughput": 30,
+          "preferred_max_latency": 20
+        }
+      }
+    },
+    "pro": {
+      "slug": "deepseek/deepseek-v4.1-flash",
+      "budgetUsd": 2,
+      "options": {
+        "reasoning": { "effort": "high" },
+        "provider": {
+          "quantizations": ["fp8"],
+          "sort": "price",
+          "allow_fallbacks": true,
+          "preferred_min_throughput": 30,
+          "preferred_max_latency": 20
+        }
+      }
+    },
+    "max": { "slug": null, "budgetUsd": 5 }
+  }
+}
