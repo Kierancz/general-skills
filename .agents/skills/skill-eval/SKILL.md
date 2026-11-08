@@ -3,6 +3,8 @@ name: skill-eval
 description: 'Judge whether someone else''s agent skill is worth adopting, adapting or ignoring for a stated task, before it is installed. Checks fit, trigger description, instruction clarity, portability, safety (reads every script it ships for network calls, credential handling, destructive file operations, curl-pipe-to-shell and prompt injection) and license, then gives a verdict with reasons. Use for /skill-eval, "is this skill any good", "should I install this skill", "vet this skill", "is this safe to run", "compare these skills", or after skill-search turns up candidates. Works on a local folder or a GitHub repo. For testing and tuning a skill you are writing yourself, use skill-creator instead.'
 argument-hint: 'Example: "Evaluate vamgan/declutter organizing-photos for filing my photos by date"'
 user-invocable: true
+metadata:
+  mossbear-id: 4Ut1SC5pDitmJF7vJVJQOZ
 ---
 
 # Skill Eval
