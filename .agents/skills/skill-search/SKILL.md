@@ -3,6 +3,8 @@ name: skill-search
 description: 'Find existing agent skills, plugins or tools that could do a task, before anyone writes a new one. Searches the skills on this machine, Claude Code plugin marketplaces, the skills.sh directory behind `npx skills`, and GitHub repos with a SKILL.md, then returns a short ranked list with source URL, what each does and how it would be installed. Use for /skill-search, "is there a skill for X", "find a skill that does Y", "has anyone built this already", "what skills exist for Z", or as the first step before building a new skill. Search only: it never installs or runs a candidate. To judge one candidate in depth, use skill-eval.'
 argument-hint: 'Example: "Find skills that sort photos into date folders"'
 user-invocable: true
+metadata:
+  mossbear-id: eScssNURpHcmztLOgAi76B
 ---
 
 # Skill Search

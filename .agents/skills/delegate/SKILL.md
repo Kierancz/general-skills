@@ -1,6 +1,8 @@
 ---
 name: delegate
 description: Hand a bounded task to a cheap open-weights model on OpenRouter (GLM flash by default) running headless under OpenCode on this machine, and read back a compact result whose facts the launcher checked — so Claude usage goes to deciding, not reading or typing. Two modes, scout (read-only questions) and worker (edits inside a declared scope, graded by checks the launcher runs itself). Use for fan-out search ("find every caller of X", "map this subsystem"), CI-log or long-file digestion, web or GitHub research, and mechanical edits with a check (a rename across files, fixing type errors, tests against an existing spec); "delegate this", "scout this", "have a flash model do it", "save usage". Do not use for anything that decides (specs, security/design review, access-control or data-scoping logic, migration design, user-facing copy), for an edit with no mechanical check, or for work a deterministic script already does.
+metadata:
+  mossbear-id: jRLM7WhlTkOxJQQhWQa98z
 ---
 
 # Delegate

@@ -3,6 +3,8 @@ name: photo-filer
 description: 'File photos and videos into one folder per day, YEAR/YEAR-MM-DD (e.g. 2024/2024-03-17/), by the date each was taken, using exiftool. Always writes a plan first and moves nothing until it is approved; keeps a log with undo; byte-identical duplicates go to a review folder, never deleted. Use for /photo-filer, "organize my photos", "sort my pictures by date", "my photos are a mess", "file these into date folders", "clean up this camera dump", "tidy the photos on this drive". Local files only. Not for culling bad shots, editing metadata, or moving files inside Apple Photos or Lightroom (export from those apps instead).'
 argument-hint: 'Example: "File ~/Pictures/photos by date"'
 user-invocable: true
+metadata:
+  mossbear-id: jXwbagZVtM3oVAkARnjtPV
 ---
 
 # Photo Filer
