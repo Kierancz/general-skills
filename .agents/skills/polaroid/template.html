@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<meta name="description" content="__DESCRIPTION__">
+<meta property="og:title" content="__TITLE__">
+<meta property="og:description" content="__DESCRIPTION__">
+__SHARE_META__<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cork: #d8914a;
+    --frame: 14px;
+    --card: #fdfbf6;
+    --card-shade: #f4f0e8;
+    --back: #f6f2ea;
+    --ink: #2a2c38;
+    --ink-soft: #6f6b62;
+    --shadow: 46, 28, 12;
+    --control: rgba(34, 23, 13, 0.66);
+    --control-hover: rgba(34, 23, 13, 0.8);
+    --control-ink: #fbf6ee;
+    --accent: #f3c46b;
+    --aspect: __ASPECT__;
+    --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    /* Every texture is SVG noise drawn in place, so the page loads no image for it. */
+    --grain-card: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2  0 0 0 0 .16  0 0 0 0 .1  0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    /* Cork, matched to photos of a real board: dense fine granules on an orange-tan ground,
+       noise mapped onto a ramp from crevice brown to granule highlight, with the odd deep pit. */
+    --cork-dim: linear-gradient(transparent, transparent);
+    --cork-pits: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='1' seed='23' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.32  0 0 0 0 0.15  0 0 0 0 0.02  -16 0 0 0 4.75'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --cork-surface: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2.0 0 0 0 -0.5  2.0 0 0 0 -0.5  2.0 0 0 0 -0.5  0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='table' tableValues='.6 .74 .83 .88 .93 .98 1'/%3E%3CfeFuncG type='table' tableValues='.35 .45 .54 .59 .64 .69 .74'/%3E%3CfeFuncB type='table' tableValues='.07 .14 .22 .27 .32 .38 .45'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --pine-across: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='60'%3E%3Cfilter id='n' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .22' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2.4 0 0 0 -.7  2.4 0 0 0 -.7  2.4 0 0 0 -.7  0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='table' tableValues='.7 .8 .86 .9'/%3E%3CfeFuncG type='table' tableValues='.5 .6 .67 .72'/%3E%3CfeFuncB type='table' tableValues='.28 .38 .45 .5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --pine-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='600'%3E%3Cfilter id='n' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.22 .006' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2.4 0 0 0 -.7  2.4 0 0 0 -.7  2.4 0 0 0 -.7  0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='table' tableValues='.7 .8 .86 .9'/%3E%3CfeFuncG type='table' tableValues='.5 .6 .67 .72'/%3E%3CfeFuncB type='table' tableValues='.28 .38 .45 .5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --shadow: 0, 0, 0; --cork-dim: linear-gradient(rgba(14, 8, 2, 0.5), rgba(14, 8, 2, 0.5)); }
+    body::after { filter: brightness(0.55); }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { min-height: 100%; }
+  body {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: calc(26px + var(--frame)) calc(16px + var(--frame)) calc(14px + var(--frame));
+    background:
+      var(--cork-dim),
+      var(--cork-pits),
+      radial-gradient(130% 100% at 50% 35%, transparent 60%, rgba(var(--shadow), 0.2) 100%),
+      var(--cork-surface);
+    background-color: var(--cork);
+    font-family: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+    color: var(--ink);
+  }
+  /* The board's pine frame round the edge of the screen, and the shadow it casts on the cork. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    background:
+      var(--pine-across) left top / auto var(--frame) repeat-x,
+      var(--pine-across) left bottom / auto var(--frame) repeat-x,
+      var(--pine-down) left top / var(--frame) auto repeat-y,
+      var(--pine-down) right top / var(--frame) auto repeat-y;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: var(--frame);
+    z-index: 21;
+    pointer-events: none;
+    box-shadow:
+      0 0 0 1px rgba(70, 40, 12, 0.45),
+      inset 0 3px 6px -1px rgba(var(--shadow), 0.4),
+      inset 2px 0 5px -2px rgba(var(--shadow), 0.3),
+      inset -2px 0 5px -2px rgba(var(--shadow), 0.3),
+      inset 0 -1px 3px -1px rgba(var(--shadow), 0.2);
+  }
+  @media (max-width: 440px) { :root { --frame: 10px; } }
+
+  /* ── the card ── */
+  .polaroid {
+    /* Fit the whole card and the controls on one screen. The card's height is its width times
+       the top and bottom borders (0.318) plus the photo (0.898 of the width, over its shape). */
+    width: min(100%, 520px, calc((100svh - 150px) / (0.318 + 0.898 / var(--aspect))));
+    min-width: min(100%, 280px);
+    perspective: 1800px;
+  }
+  .editing.polaroid { width: min(100%, 520px, calc((100svh - 420px) / (0.318 + 0.898 / var(--aspect)))); }
+  .flipper {
+    display: grid;
+    transition: transform 700ms cubic-bezier(.3, .7, .2, 1);
+    transform-style: preserve-3d;
+  }
+  .polaroid.flipped .flipper { transform: rotateY(180deg); }
+  .face {
+    grid-area: 1 / 1;
+    border-radius: 6px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow:
+      0 1px 2px rgba(var(--shadow), 0.3),
+      0 6px 12px -2px rgba(var(--shadow), 0.22),
+      0 22px 40px -10px rgba(var(--shadow), 0.36),
+      0 48px 90px -24px rgba(var(--shadow), 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -2px 3px rgba(var(--shadow), 0.07),
+      inset 0 0 0 1px rgba(var(--shadow), 0.05);
+  }
+  /* Instant film: 88 mm wide, a 79 mm image 6 mm from the top, and a 22 mm strip below it to write on. */
+  .front {
+    padding: 6.8% 5.1% 0;
+    background: var(--grain-card), linear-gradient(160deg, var(--card) 0%, var(--card) 45%, var(--card-shade) 100%);
+  }
+  .back {
+    transform: rotateY(180deg);
+    padding: 28px 28px 24px;
+    background: var(--grain-card), linear-gradient(200deg, var(--back) 0%, #efe9de 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: auto;
+  }
+  .photo {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1px;
+    background: #111;
+    aspect-ratio: var(--aspect);
+  }
+  .photo img, .photo canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo img { animation: develop 3.2s ease-out both; }
+  .photo canvas { display: none; }
+  .photo.edited img { display: none; }
+  .photo.edited canvas { display: block; }
+  /* The print sits a little below the frame: a shadow along the top edge, and a gloss across the surface. */
+  .photo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(125deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 28%, rgba(255, 255, 255, 0) 45%);
+    box-shadow:
+      inset 0 2px 5px rgba(0, 0, 0, 0.35),
+      inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+      inset 0 0 50px rgba(0, 0, 0, 0.14);
+    pointer-events: none;
+  }
+  /* Only while editing does a finger on the photo move it instead of scrolling the page. */
+  .editing .photo { cursor: grab; touch-action: none; }
+  .editing .photo:active { cursor: grabbing; }
+  .editing .photo::before {
+    /* Rule-of-thirds guides while reframing. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(to right, transparent calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)),
+      linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px));
+  }
+  @keyframes develop {
+    0% { filter: brightness(0.15) sepia(1) contrast(0.6) blur(3px); opacity: 0.6; }
+    40% { filter: brightness(0.7) sepia(0.6) contrast(0.8) blur(1px); opacity: 1; }
+    100% { filter: none; }
+  }
+  .caption-wrap {
+    aspect-ratio: 79 / 22;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    text-align: center;
+  }
+  .caption {
+    display: inline-block;
+    min-width: 4ch;
+    min-height: 1.15em;
+    max-width: 100%;
+    padding: 0 6px;
+    border-radius: 6px;
+    font-size: clamp(26px, 6vw, 34px);
+    font-weight: 500;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    text-shadow: 0 0 0.6px rgba(42, 44, 56, 0.45);
+    outline: none;
+    cursor: text;
+    transition: background-color 150ms ease;
+  }
+  .caption:hover { background: rgba(42, 44, 56, 0.05); }
+  .caption:focus-visible, .caption:focus { background: rgba(42, 44, 56, 0.07); box-shadow: 0 2px 0 rgba(42, 44, 56, 0.35); }
+  /* An empty caption leaves the card blank; the prompt shows only while someone could be writing one. */
+  .caption:empty:focus::before, .options .caption:empty::before { content: attr(data-placeholder); color: var(--ink-soft); }
+  .date {
+    display: block;
+    margin-top: 6px;
+    font-size: clamp(17px, 3.8vw, 21px);
+    color: var(--ink-soft);
+  }
+
+  /* ── the back ── */
+  .back dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 14px;
+    row-gap: 8px;
+    align-items: baseline;
+  }
+  .back dt {
+    font-family: var(--ui);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .back dd {
+    font-size: 23px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+  .back .note {
+    font-size: 25px;
+    line-height: 1.2;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(42, 44, 56, 0.2);
+    white-space: pre-wrap;
+  }
+
+  /* ── controls ── */
+  /* The controls and the hint share one slot, so showing either never moves the card. */
+  .controls {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+  }
+  .controls > * { grid-area: 1 / 1; }
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 0s;
+  }
+  /* Hidden until the photo is tapped; visibility keeps the buttons out of the tab order too. */
+  .bar.concealed {
+    opacity: 0;
+    transform: translateY(6px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 220ms;
+  }
+  .tap-hint {
+    font-size: 22px;
+    color: rgba(42, 30, 16, 0.72);
+    pointer-events: none;
+    transition: opacity 220ms ease;
+  }
+  .tap-hint[hidden] { display: none; }
+  .bar:not(.concealed) ~ .tap-hint { opacity: 0; }
+  @media (prefers-color-scheme: dark) { .tap-hint { color: rgba(251, 246, 238, 0.6); } }
+  .polaroid:not(.editing) .photo { cursor: pointer; }
+  .polaroid:not(.editing) .photo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .bar[hidden], .editor[hidden], .menu[hidden] { display: none; }
+  button.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--control);
+    color: var(--control-ink);
+    font: 600 15px/1 var(--ui);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 4px 14px rgba(var(--shadow), 0.25);
+    transition: background-color 150ms ease, transform 150ms ease;
+  }
+  button.chip:hover { background: var(--control-hover); }
+  button.chip:active { transform: scale(0.97); }
+  button.chip:focus-visible, .filters button:focus-visible, .seg button:focus-visible, input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button.chip.primary { background: var(--accent); color: #2b1d0c; }
+  button.chip svg { width: 18px; height: 18px; flex: none; }
+  .menu {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 0;
+    min-width: 240px;
+    padding: 6px;
+    border-radius: 16px;
+    background: rgba(34, 23, 13, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 36px rgba(var(--shadow), 0.4);
+    z-index: 5;
+  }
+  .menu button {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--control-ink);
+    text-align: left;
+    font: 600 15px/1.25 var(--ui);
+    cursor: pointer;
+  }
+  .menu button small { display: block; font-weight: 400; font-size: 13px; opacity: 0.72; }
+  .menu button:hover, .menu button:focus-visible { background: rgba(255, 255, 255, 0.1); outline: none; }
+  /* Share: a QR code a friend can scan from this screen, and the link to copy. */
+  .share-panel {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(300px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 20px;
+    background: rgba(34, 23, 13, 0.92);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 36px rgba(var(--shadow), 0.4);
+    color: var(--control-ink);
+    font-family: var(--ui);
+    z-index: 5;
+  }
+  .share-panel[hidden], button.chip[hidden] { display: none; }
+  /* A QR code needs dark modules on a light ground in either colour scheme. */
+  .qr { padding: 6px; border-radius: 12px; background: #fff; }
+  .qr svg { display: block; width: 100%; height: auto; }
+  @media (max-height: 640px) {
+    /* No room to rise above the buttons (a phone on its side): centre on the screen, and shrink the code to fit. */
+    .share-panel { position: fixed; top: 50%; bottom: auto; transform: translate(-50%, -50%); }
+    .qr svg { max-height: calc(100svh - 210px); }
+  }
+  .share-hint { font: 13px/1.3 var(--ui); text-align: center; opacity: 0.8; }
+  .link {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: inherit;
+    font: 13px/1 var(--ui);
+    text-overflow: ellipsis;
+  }
+  .link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 440px) {
+    /* Four chips on one row at phone width. */
+    button.chip { padding: 0 12px; gap: 6px; }
+  }
+  .editor {
+    width: min(100%, 560px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 20px;
+    background: var(--control);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 28px rgba(var(--shadow), 0.3);
+    color: var(--control-ink);
+    font-family: var(--ui);
+  }
+  .filters {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+    scrollbar-width: thin;
+  }
+  .filters button {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: 500 12px/1 var(--ui);
+    cursor: pointer;
+  }
+  .filters canvas {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background: #222;
+  }
+  .filters button[aria-pressed="true"] canvas { border-color: var(--accent); }
+  .filters button[aria-pressed="true"] { color: var(--accent); }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+  }
+  .seg {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .seg button {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font: 600 13px/1 var(--ui);
+    cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--control-ink); color: #2b1d0c; }
+  .zoom {
+    flex: 1 1 160px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 600 13px/1 var(--ui);
+  }
+  .zoom input { flex: 1; accent-color: var(--accent); min-height: 32px; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .actions button.chip { min-height: 40px; background: rgba(255, 255, 255, 0.12); box-shadow: none; }
+  .actions button.chip.primary { background: var(--accent); }
+  .hint { font: 13px/1.3 var(--ui); opacity: 0.75; }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 20px);
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: rgba(34, 23, 13, 0.92);
+    color: var(--control-ink);
+    font: 600 14px/1.2 var(--ui);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) {
+    .photo img { animation: none; }
+    .flipper, .toast, button.chip, .bar, .bar.concealed, .tap-hint { transition: none; }
+  }
+</style>
+</head>
+<body>
+<figure class="polaroid" id="polaroid">
+  <div class="flipper">
+    <div class="face front" id="front">
+      <div class="photo" id="photo">
+        <img id="img" src="__SRC__" width="__W__" height="__H__" alt="__ALT__">
+        <canvas id="canvas" aria-hidden="true"></canvas>
+      </div>
+      <figcaption class="caption-wrap">
+        <span class="caption" id="caption" role="textbox" aria-label="Caption. Tap to edit." data-placeholder="Write a caption" spellcheck="false">__CAPTION__</span>
+        __DATE_HTML__
+      </figcaption>
+    </div>
+    <div class="face back" id="back" aria-hidden="true" inert>
+      <dl id="details"></dl>
+      __NOTE_HTML__
+    </div>
+  </div>
+</figure>
+
+<div class="controls">
+<div class="bar concealed" id="bar" hidden>
+  <button class="chip" id="flip" type="button" aria-pressed="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>
+    <span id="flip-label">Flip</span>
+  </button>
+  <button class="chip" id="edit" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10"/><path d="M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h4"/><path d="M12 12h8"/><circle cx="10" cy="12" r="2"/><path d="M4 18h12"/><path d="M20 18h0"/><circle cx="18" cy="18" r="2"/></svg>
+    Edit
+  </button>
+  <button class="chip" id="share" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="share-panel" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    Share
+  </button>
+  <div class="share-panel" id="share-panel" role="dialog" aria-label="Share this polaroid" hidden>
+    <div class="qr" id="qr"></div>
+    <p class="share-hint">Scan with a phone camera to open this polaroid.</p>
+    <input class="link" id="link" type="text" readonly aria-label="Link to this polaroid">
+    <div class="actions">
+      <button class="chip" id="send" type="button" hidden>Send…</button>
+      <button class="chip primary" id="copy" type="button">Copy link</button>
+    </div>
+  </div>
+  <button class="chip primary" id="save" type="button" aria-haspopup="menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    Save
+  </button>
+  <div class="menu" id="menu" role="menu" hidden>
+    <button type="button" role="menuitem" data-save="polaroid">The polaroid<small>Frame and photo, no background</small></button>
+    <button type="button" role="menuitem" data-save="photo">Just the photo<small>With your filter and crop</small></button>
+  </div>
+</div>
+<p class="tap-hint" id="hint" hidden>Tap the photo for options</p>
+</div>
+
+<section class="editor" id="editor" aria-label="Edit photo" hidden>
+  <div class="filters" id="filters" role="group" aria-label="Filters"></div>
+  <div class="row">
+    <div class="seg" id="aspects" role="group" aria-label="Shape">
+      <button type="button" data-aspect="square">Polaroid</button>
+      <button type="button" data-aspect="portrait">4:5</button>
+      <button type="button" data-aspect="original">Original</button>
+    </div>
+    <label class="zoom">Zoom <input id="zoom" type="range" min="1" max="4" step="0.01" value="1"></label>
+  </div>
+  <p class="hint">Drag the photo to reframe it. Pinch or scroll to zoom.</p>
+  <div class="actions">
+    <button class="chip" id="reset" type="button">Reset</button>
+    <button class="chip primary" id="done" type="button">Done</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="application/json" id="polaroid-data">__DATA__</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('polaroid-data').textContent);
+  const $ = (id) => document.getElementById(id);
+  const card = $('polaroid'), photoBox = $('photo'), img = $('img'), canvas = $('canvas');
+  const captionEl = $('caption'), bar = $('bar'), editor = $('editor'), menu = $('menu');
+
+  // ── filters: per-pixel recipes, the same for the screen and the saved file ──
+  const FILTERS = [
+    { id: 'original', name: 'Original' },
+    { id: 'clear', name: 'Clear', contrast: 1.12, saturation: 1.2, brightness: 1.03 },
+    { id: 'warm', name: 'Warm', warmth: 16, saturation: 1.08, contrast: 1.05, fade: 0.04 },
+    { id: 'fade', name: 'Fade', fade: 0.2, contrast: 0.9, saturation: 0.78, warmth: 6 },
+    { id: 'retro', name: 'Retro', sepia: 0.35, fade: 0.12, contrast: 1.06, warmth: 10, vignette: 0.4 },
+    { id: 'lagoon', name: 'Lagoon', tint: [20, 120, 140, 0.12], saturation: 1.1, contrast: 1.06, warmth: -10 },
+    { id: 'bloom', name: 'Bloom', brightness: 1.07, tint: [255, 160, 185, 0.1], fade: 0.08, saturation: 1.05 },
+    { id: 'mono', name: 'Mono', gray: 1, contrast: 1.1 },
+    { id: 'noir', name: 'Noir', gray: 1, contrast: 1.45, brightness: 0.95, vignette: 0.5 },
+  ];
+  const byId = Object.fromEntries(FILTERS.map((f) => [f.id, f]));
+
+  function applyFilter(ctx, w, h, f) {
+    if (!f || f.id === 'original') return;
+    const image = ctx.getImageData(0, 0, w, h), d = image.data;
+    const bright = f.brightness ?? 1, con = f.contrast ?? 1, fade = f.fade ?? 0, warm = f.warmth ?? 0;
+    const sat = f.saturation ?? 1, gray = f.gray ?? 0, sepia = f.sepia ?? 0, vig = f.vignette ?? 0;
+    const tone = new Uint8ClampedArray(256);
+    for (let i = 0; i < 256; i++) {
+      let v = i * bright;
+      v = (v - 128) * con + 128;
+      v = v * (1 - fade) + 255 * fade * 0.35 + fade * 30;
+      tone[i] = v;
+    }
+    const tint = f.tint;
+    for (let y = 0; y < h; y++) {
+      const dy = y / h - 0.5;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        let r = d[i], g = d[i + 1], b = d[i + 2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        if (gray) { r = g = b = lum; }
+        else if (sat !== 1) { r = lum + (r - lum) * sat; g = lum + (g - lum) * sat; b = lum + (b - lum) * sat; }
+        if (sepia) {
+          const sr = 0.393 * r + 0.769 * g + 0.189 * b, sg = 0.349 * r + 0.686 * g + 0.168 * b, sb = 0.272 * r + 0.534 * g + 0.131 * b;
+          r += (sr - r) * sepia; g += (sg - g) * sepia; b += (sb - b) * sepia;
+        }
+        if (tint) { r += (tint[0] - r) * tint[3]; g += (tint[1] - g) * tint[3]; b += (tint[2] - b) * tint[3]; }
+        r = tone[Math.max(0, Math.min(255, r + warm)) | 0];
+        g = tone[Math.max(0, Math.min(255, g)) | 0];
+        b = tone[Math.max(0, Math.min(255, b - warm)) | 0];
+        if (vig) {
+          const dx = x / w - 0.5;
+          const k = 1 - vig * Math.pow((dx * dx + dy * dy) * 2, 1.4);
+          r *= k; g *= k; b *= k;
+        }
+        d[i] = r; d[i + 1] = g; d[i + 2] = b;
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+  }
+
+  // ── state: kept in this viewer's browser only ──
+  const KEY = 'polaroid:' + location.host + location.pathname;
+  const fresh = () => ({ filter: 'original', aspect: D.aspect, zoom: 1, cx: 0.5, cy: 0.5, caption: D.caption });
+  let state = fresh();
+  try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+
+  const ratio = (a) => (a === 'square' ? 1 : a === 'portrait' ? 4 / 5 : D.w / D.h);
+  // The plain photo, cropped by object-fit, shows any shape centred; the canvas takes over once it is filtered or moved.
+  const edited = () => state.filter !== 'original' || state.zoom > 1.001 || Math.abs(state.cx - 0.5) > 0.001 || Math.abs(state.cy - 0.5) > 0.001;
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  /** The part of the source shown in a window of the current shape, and the state clamped to it. */
+  function cropRect(sw, sh) {
+    const a = ratio(state.aspect);
+    let cw = sw / sh > a ? sh * a : sw, ch = sw / sh > a ? sh : sw / a;
+    cw /= state.zoom; ch /= state.zoom;
+    const x = clamp(state.cx * sw - cw / 2, 0, sw - cw), y = clamp(state.cy * sh - ch / 2, 0, sh - ch);
+    state.cx = (x + cw / 2) / sw; state.cy = (y + ch / 2) / sh;
+    return { x, y, w: cw, h: ch };
+  }
+
+  function draw(target, source, w, h, filterId) {
+    target.width = Math.round(w); target.height = Math.round(h);
+    const ctx = target.getContext('2d', { willReadFrequently: true });
+    const r = cropRect(source.width, source.height);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(source, r.x, r.y, r.w, r.h, 0, 0, target.width, target.height);
+    applyFilter(ctx, target.width, target.height, byId[filterId]);
+    return target;
+  }
+
+  // A full-resolution canvas copy of the photo, and a smaller one for drawing on screen.
+  let full = null, preview = null;
+  const ready = new Promise((resolve) => {
+    const go = () => {
+      full = document.createElement('canvas');
+      full.width = img.naturalWidth; full.height = img.naturalHeight;
+      full.getContext('2d').drawImage(img, 0, 0);
+      const s = Math.min(1, 1400 / Math.max(full.width, full.height));
+      preview = document.createElement('canvas');
+      preview.width = Math.round(full.width * s); preview.height = Math.round(full.height * s);
+      preview.getContext('2d').drawImage(full, 0, 0, preview.width, preview.height);
+      resolve();
+    };
+    if (img.complete && img.naturalWidth) go(); else img.addEventListener('load', go, { once: true });
+  });
+
+  let frame = 0;
+  function render() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      document.documentElement.style.setProperty('--aspect', String(ratio(state.aspect)));
+      if (preview) cropRect(preview.width, preview.height);
+      photoBox.classList.toggle('edited', edited());
+      if (!edited() || !preview) return;
+      const box = photoBox.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      draw(canvas, preview, box.width * dpr, box.width / ratio(state.aspect) * dpr, state.filter);
+      canvas.style.animation = 'none';
+    });
+  }
+
+  // ── caption: editable, starts from the caption the page was made with ──
+  /** Show a caption; an empty one leaves the element truly empty, so the card stays blank. */
+  const showCaption = (text) => { if (text) captionEl.textContent = text; else captionEl.replaceChildren(); };
+  showCaption(state.caption);
+  captionEl.contentEditable = 'plaintext-only';
+  if (captionEl.contentEditable !== 'plaintext-only') {
+    captionEl.contentEditable = 'true';
+    captionEl.addEventListener('paste', (e) => {
+      e.preventDefault();
+      document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+    });
+  }
+  captionEl.addEventListener('input', () => {
+    state.caption = captionEl.textContent.trim() ? captionEl.textContent.replace(/\n{3,}/g, '\n\n') : '';
+    persist();
+  });
+  captionEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); captionEl.blur(); }
+  });
+  // Deleting every word leaves no caption at all; Reset brings the original back.
+  captionEl.addEventListener('blur', () => {
+    if (!captionEl.textContent.trim()) { captionEl.replaceChildren(); state.caption = ''; persist(); }
+  });
+  // With nothing written there the caption is a sliver, so the whole strip under the photo starts one.
+  captionEl.parentElement.addEventListener('click', (e) => { if (e.target === e.currentTarget) captionEl.focus(); });
+
+  // ── the back ──
+  const details = $('details');
+  function fillBack() {
+    const rows = [...D.details, ['Filter', byId[state.filter].name]];
+    details.replaceChildren(...rows.flatMap(([k, v]) => {
+      const dt = document.createElement('dt'), dd = document.createElement('dd');
+      dt.textContent = k; dd.textContent = v;
+      return [dt, dd];
+    }));
+  }
+
+  // ── controls ──
+  const toastEl = $('toast');
+  let toastTimer = 0;
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+  }
+
+  function flip(to) {
+    const flipped = to ?? !card.classList.contains('flipped');
+    if (flipped) fillBack();
+    card.classList.toggle('flipped', flipped);
+    $('flip').setAttribute('aria-pressed', String(flipped));
+    $('flip-label').textContent = flipped ? 'Front' : 'Flip';
+    // The face turned away is inert: out of the tab order and the accessibility
+    // tree, so focus never lands on a caption or photo nobody can see.
+    $('front').inert = flipped;
+    $('back').inert = !flipped;
+    $('front').setAttribute('aria-hidden', String(flipped));
+    $('back').setAttribute('aria-hidden', String(!flipped));
+  }
+  $('flip').addEventListener('click', () => flip());
+  $('back').addEventListener('click', () => flip(false));
+
+  // Save: both files are made as soon as the menu opens, so the share sheet
+  // opens straight from the tap (phones refuse it after a long wait).
+  let made = {};
+  function openMenu(open) {
+    menu.hidden = !open;
+    $('save').setAttribute('aria-expanded', String(open));
+    if (open) {
+      openShare(false);
+      made = { polaroid: makePolaroid(), photo: makePhoto() };
+      menu.querySelector('button').focus();
+    }
+  }
+  $('save').addEventListener('click', (e) => { e.stopPropagation(); openMenu(menu.hidden); });
+  document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target)) openMenu(false); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!menu.hidden) { openMenu(false); $('save').focus(); }
+    else if (!sharePanel.hidden) { openShare(false); $('share').focus(); }
+    else if (card.classList.contains('editing') && document.activeElement !== captionEl) { Object.assign(state, { ...before, caption: state.caption }); persist(); setEditing(false); }
+    else if (card.classList.contains('flipped')) flip(false);
+  });
+  menu.addEventListener('click', async (e) => {
+    const item = e.target.closest('[data-save]');
+    if (!item) return;
+    const kind = item.dataset.save;
+    openMenu(false);
+    try {
+      const blob = await made[kind];
+      await deliver(blob, fileName(kind, blob.type));
+    } catch (err) {
+      toast('Couldn’t make the image. Try again.');
+    }
+  });
+
+  function fileName(kind, type) {
+    const base = (state.caption || 'polaroid').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'polaroid';
+    return `${base}${kind === 'polaroid' ? '-polaroid' : ''}.${type === 'image/png' ? 'png' : 'jpg'}`;
+  }
+
+  async function deliver(blob, name) {
+    const file = new File([blob], name, { type: blob.type });
+    const phone = matchMedia('(pointer: coarse)').matches;
+    if (phone && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return; }
+      catch (err) { if (err.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast('Saved ' + name);
+  }
+
+  const toBlob = (c, type, q) => new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('empty'))), type, q));
+
+  async function makePhoto() {
+    if (!edited() && state.aspect === 'original') return (await fetch(D.src)).blob();
+    await ready;
+    const r = cropRect(full.width, full.height);
+    const out = draw(document.createElement('canvas'), full, r.w, r.h, state.filter);
+    return toBlob(out, 'image/jpeg', 0.92);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function wrap(ctx, text, max) {
+    const lines = [];
+    for (const para of text.split('\n')) {
+      let line = '';
+      for (const word of para.split(/\s+/).filter(Boolean)) {
+        const next = line ? line + ' ' + word : word;
+        if (ctx.measureText(next).width > max && line) { lines.push(line); line = word; } else line = next;
+      }
+      lines.push(line);
+    }
+    return lines;
+  }
+
+  /** The front of the card alone, at print-like size, transparent outside its rounded corners. */
+  async function makePolaroid() {
+    await ready;
+    try { await document.fonts.load('500 80px Caveat'); } catch {}
+    // Instant-film proportions, as on screen: 88 mm wide, the image 4.5 mm from the sides and 6 mm from the top.
+    const W = 1600, pad = Math.round(W * 0.051), top = Math.round(W * 0.068), pw = W - pad * 2, ph = Math.round(pw / ratio(state.aspect));
+    const capSize = Math.round(W * 0.072), dateSize = Math.round(W * 0.044), lead = capSize * 1.15;
+    const probe = document.createElement('canvas').getContext('2d');
+    probe.font = `500 ${capSize}px Caveat, "Bradley Hand", cursive`;
+    const caption = (state.caption || '').trim();
+    const lines = caption ? wrap(probe, caption, pw * 0.92) : [];
+    const textH = lines.length * lead + (D.date ? dateSize * 1.5 : 0);
+    const capH = Math.max(Math.round(W * 0.25), Math.round(textH + W * 0.08));
+    const H = top + ph + capH;
+
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    const radius = W * 0.011;
+    roundRect(ctx, 0, 0, W, H, radius);
+    ctx.save();
+    ctx.clip();
+    const paper = ctx.createLinearGradient(0, 0, W * 0.35, H);
+    paper.addColorStop(0, '#fdfbf6'); paper.addColorStop(0.45, '#fdfbf6'); paper.addColorStop(1, '#f4f0e8');
+    ctx.fillStyle = paper;
+    ctx.fillRect(0, 0, W, H);
+    // Paper grain.
+    const grain = document.createElement('canvas');
+    grain.width = grain.height = 256;
+    const g = grain.getContext('2d'), gi = g.createImageData(256, 256);
+    for (let i = 0; i < gi.data.length; i += 4) {
+      const v = Math.random() * 255;
+      gi.data[i] = 60 + v * 0.1; gi.data[i + 1] = 48 + v * 0.08; gi.data[i + 2] = 30; gi.data[i + 3] = Math.random() * 26;
+    }
+    g.putImageData(gi, 0, 0);
+    ctx.fillStyle = ctx.createPattern(grain, 'repeat');
+    ctx.fillRect(0, 0, W, H);
+    // Edge: light on top, a faint line all round.
+    ctx.strokeStyle = 'rgba(46, 28, 12, 0.08)';
+    ctx.lineWidth = 3;
+    roundRect(ctx, 1.5, 1.5, W - 3, H - 3, radius - 1.5);
+    ctx.stroke();
+
+    // The print.
+    const shot = draw(document.createElement('canvas'), full, pw, ph, state.filter);
+    ctx.save();
+    roundRect(ctx, pad, top, pw, ph, W * 0.002);
+    ctx.clip();
+    ctx.drawImage(shot, pad, top, pw, ph);
+    const lip = ctx.createLinearGradient(0, top, 0, top + ph * 0.05);
+    lip.addColorStop(0, 'rgba(0, 0, 0, 0.32)'); lip.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = lip;
+    ctx.fillRect(pad, top, pw, ph * 0.05);
+    const gloss = ctx.createLinearGradient(pad, top, pad + pw * 0.6, top + ph * 0.6);
+    gloss.addColorStop(0, 'rgba(255, 255, 255, 0.2)'); gloss.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)'); gloss.addColorStop(0.8, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = gloss;
+    ctx.fillRect(pad, top, pw, ph);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.14)';
+    ctx.lineWidth = 2;
+    roundRect(ctx, pad + 1, top + 1, pw - 2, ph - 2, W * 0.002);
+    ctx.stroke();
+    ctx.restore();
+
+    // Caption and date.
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    let y = top + ph + (capH - textH) / 2 + capSize * 0.95;
+    ctx.fillStyle = '#2a2c38';
+    ctx.font = probe.font;
+    for (const line of lines) { ctx.fillText(line, W / 2, y); y += lead; }
+    if (D.date) {
+      ctx.fillStyle = '#6f6b62';
+      ctx.font = `500 ${dateSize}px Caveat, "Bradley Hand", cursive`;
+      ctx.fillText(D.date, W / 2, y + dateSize * 0.2);
+    }
+    ctx.restore();
+    return toBlob(c, 'image/png');
+  }
+
+  // ── share: a QR code drawn here from the page's own address, so no service sees it ──
+  /** The dark modules of a byte-mode QR code at error-correction level M, or null if the text is too long. */
+  function qrModules(text) {
+    const data = [...new TextEncoder().encode(text)];
+    // Per version 1-40 at level M: error-correction codewords per block, and the number of blocks.
+    const ECC = [0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26, 26, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28];
+    const BLOCKS = [0, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16, 17, 17, 18, 20, 21, 23, 25, 26, 28, 29, 31, 33, 35, 37, 38, 40, 43, 45, 47, 49];
+    const rawModules = (v) => {
+      let r = (16 * v + 128) * v + 64;
+      if (v >= 2) { const n = Math.floor(v / 7) + 2; r -= (25 * n - 10) * n - 55; if (v >= 7) r -= 36; }
+      return r;
+    };
+    const capacity = (v) => Math.floor(rawModules(v) / 8) - ECC[v] * BLOCKS[v];
+    let ver = 1;
+    while (ver <= 40 && 4 + (ver < 10 ? 8 : 16) + data.length * 8 > capacity(ver) * 8) ver++;
+    if (ver > 40) return null;
+
+    // The bit stream: byte mode, the length, the bytes, a terminator, then alternating pad bytes.
+    const bits = [];
+    const put = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
+    const cap = capacity(ver) * 8;
+    put(4, 4); put(data.length, ver < 10 ? 8 : 16); data.forEach((b) => put(b, 8));
+    put(0, Math.min(4, cap - bits.length));
+    put(0, (8 - bits.length % 8) % 8);
+    for (let pad = 0xEC; bits.length < cap; pad ^= 0xEC ^ 0x11) put(pad, 8);
+    const words = [];
+    for (let i = 0; i < bits.length; i += 8) words.push(bits.slice(i, i + 8).reduce((a, b) => (a << 1) | b, 0));
+
+    // Reed-Solomon error correction for each block, then the blocks interleaved.
+    const mul = (x, y) => {
+      let z = 0;
+      for (let i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; }
+      return z;
+    };
+    const eccLen = ECC[ver], nBlocks = BLOCKS[ver], raw = Math.floor(rawModules(ver) / 8);
+    const div = new Array(eccLen).fill(0);
+    div[eccLen - 1] = 1;
+    for (let i = 0, root = 1; i < eccLen; i++, root = mul(root, 2)) {
+      for (let j = 0; j < eccLen; j++) { div[j] = mul(div[j], root); if (j + 1 < eccLen) div[j] ^= div[j + 1]; }
+    }
+    const shortLen = Math.floor(raw / nBlocks), nShort = nBlocks - raw % nBlocks;
+    const blocks = [];
+    for (let i = 0, k = 0; i < nBlocks; i++) {
+      const dat = words.slice(k, k + shortLen - eccLen + (i < nShort ? 0 : 1));
+      k += dat.length;
+      const rem = new Array(eccLen).fill(0);
+      for (const b of dat) { const f = b ^ rem.shift(); rem.push(0); div.forEach((c, j) => { rem[j] ^= mul(c, f); }); }
+      if (i < nShort) dat.push(0);
+      blocks.push(dat.concat(rem));
+    }
+    const stream = [];
+    for (let i = 0; i < blocks[0].length; i++) {
+      blocks.forEach((b, j) => { if (i !== shortLen - eccLen || j >= nShort) stream.push(b[i]); });
+    }
+
+    // The fixed patterns: finders, timing lines, alignment marks, format and version bits.
+    const size = ver * 4 + 17;
+    const dark = Array.from({ length: size }, () => new Array(size).fill(false));
+    const fixed = Array.from({ length: size }, () => new Array(size).fill(false));
+    const set = (x, y, on) => { dark[y][x] = on; fixed[y][x] = true; };
+    for (let i = 0; i < size; i++) { set(6, i, i % 2 === 0); set(i, 6, i % 2 === 0); }
+    const finder = (cx, cy) => {
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) {
+        const x = cx + dx, y = cy + dy, d = Math.max(Math.abs(dx), Math.abs(dy));
+        if (x >= 0 && x < size && y >= 0 && y < size) set(x, y, d !== 2 && d !== 4);
+      }
+    };
+    finder(3, 3); finder(size - 4, 3); finder(3, size - 4);
+    if (ver > 1) {
+      const n = Math.floor(ver / 7) + 2, step = Math.floor((ver * 8 + n * 3 + 5) / (n * 4 - 4)) * 2;
+      const pos = [6];
+      for (let p = size - 7; pos.length < n; p -= step) pos.splice(1, 0, p);
+      pos.forEach((x, i) => pos.forEach((y, j) => {
+        if ((i === 0 && j === 0) || (i === 0 && j === n - 1) || (i === n - 1 && j === 0)) return;
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(x + dx, y + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+      }));
+    }
+    const format = (mask) => {
+      let rem = mask; // level M's two bits are 00
+      for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+      const b = ((mask << 10) | rem) ^ 0x5412, bit = (i) => ((b >>> i) & 1) === 1;
+      for (let i = 0; i <= 5; i++) set(8, i, bit(i));
+      set(8, 7, bit(6)); set(8, 8, bit(7)); set(7, 8, bit(8));
+      for (let i = 9; i < 15; i++) set(14 - i, 8, bit(i));
+      for (let i = 0; i < 8; i++) set(size - 1 - i, 8, bit(i));
+      for (let i = 8; i < 15; i++) set(8, size - 15 + i, bit(i));
+      set(8, size - 8, true);
+    };
+    format(0);
+    if (ver >= 7) {
+      let rem = ver;
+      for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1F25);
+      const b = (ver << 12) | rem;
+      for (let i = 0; i < 18; i++) {
+        const on = ((b >>> i) & 1) === 1, a = size - 11 + i % 3, c = Math.floor(i / 3);
+        set(a, c, on); set(c, a, on);
+      }
+    }
+
+    // The data, in two-column zigzags from the bottom right, skipping the fixed patterns.
+    let i = 0;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let v = 0; v < size; v++) for (let j = 0; j < 2; j++) {
+        const x = right - j, y = ((right + 1) & 2) === 0 ? size - 1 - v : v;
+        if (!fixed[y][x] && i < stream.length * 8) { dark[y][x] = ((stream[i >>> 3] >>> (7 - (i & 7))) & 1) === 1; i++; }
+      }
+    }
+
+    // Any mask decodes; the one with the fewest long runs, solid blocks and imbalance scans best.
+    const MASKS = [
+      (x, y) => (x + y) % 2, (x, y) => y % 2, (x) => x % 3, (x, y) => (x + y) % 3,
+      (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2, (x, y) => x * y % 2 + x * y % 3,
+      (x, y) => (x * y % 2 + x * y % 3) % 2, (x, y) => ((x + y) % 2 + x * y % 3) % 2,
+    ];
+    const applyMask = (m) => {
+      for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fixed[y][x] && MASKS[m](x, y) === 0) dark[y][x] = !dark[y][x];
+    };
+    const penalty = () => {
+      let p = 0, count = 0;
+      for (let a = 0; a < size; a++) {
+        for (const at of [(b) => dark[a][b], (b) => dark[b][a]]) {
+          let run = 1;
+          for (let b = 1; b <= size; b++) {
+            if (b < size && at(b) === at(b - 1)) run++;
+            else { if (run >= 5) p += run - 2; run = 1; }
+          }
+        }
+      }
+      for (let y = 0; y < size - 1; y++) for (let x = 0; x < size - 1; x++) {
+        const c = dark[y][x];
+        if (c === dark[y][x + 1] && c === dark[y + 1][x] && c === dark[y + 1][x + 1]) p += 3;
+      }
+      for (const row of dark) for (const c of row) count += c;
+      return p + Math.floor(Math.abs(count * 20 - size * size * 10) / (size * size)) * 10;
+    };
+    let best = 0, lowest = Infinity;
+    for (let m = 0; m < 8; m++) {
+      applyMask(m); format(m);
+      const p = penalty();
+      if (p < lowest) { lowest = p; best = m; }
+      applyMask(m);
+    }
+    applyMask(best); format(best);
+    return dark;
+  }
+
+  /** The page's address, without any query or fragment a viewer arrived with. */
+  const pageLink = location.origin + location.pathname.replace(/index\.html$/, '');
+  const sharePanel = $('share-panel'), linkField = $('link');
+  let qrDrawn = false;
+  function drawQr() {
+    if (qrDrawn) return;
+    qrDrawn = true;
+    const m = qrModules(pageLink);
+    if (!m) { $('qr').hidden = true; return; }
+    const quiet = 4, n = m.length + quiet * 2;
+    let d = '';
+    m.forEach((row, y) => row.forEach((on, x) => { if (on) d += `M${x + quiet} ${y + quiet}h1v1h-1z`; }));
+    $('qr').innerHTML = `<svg viewBox="0 0 ${n} ${n}" role="img" aria-label="QR code for the link to this polaroid" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="#fff"/><path d="${d}" fill="#111"/></svg>`;
+  }
+  function openShare(open) {
+    sharePanel.hidden = !open;
+    $('share').setAttribute('aria-expanded', String(open));
+    if (open) {
+      openMenu(false);
+      drawQr();
+      linkField.value = pageLink;
+      $('copy').focus();
+    }
+  }
+  // Only a page served from a web address has a link a friend can open.
+  $('share').hidden = !/^https?:$/.test(location.protocol);
+  $('send').hidden = !navigator.share;
+  $('share').addEventListener('click', (e) => { e.stopPropagation(); openShare(sharePanel.hidden); });
+  document.addEventListener('click', (e) => { if (!sharePanel.hidden && !sharePanel.contains(e.target)) openShare(false); });
+  linkField.addEventListener('focus', () => linkField.select());
+  $('copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(pageLink);
+    } catch {
+      linkField.focus();
+      linkField.select();
+      let copied = false;
+      try { copied = document.execCommand('copy'); } catch {}
+      if (!copied) { toast('Couldn’t copy. The link is selected, so copy it from there.'); return; }
+    }
+    toast('Link copied');
+  });
+  $('send').addEventListener('click', async () => {
+    try { await navigator.share({ title: document.title, url: pageLink }); }
+    catch (err) { if (err.name !== 'AbortError') toast('Couldn’t open sharing. Copy the link instead.'); }
+  });
+
+  // ── edit mode ──
+  let before = null;
+  const filterButtons = [];
+  async function buildFilterStrip() {
+    if (filterButtons.length) return;
+    await ready;
+    const src = document.createElement('canvas');
+    const s = Math.min(preview.width, preview.height);
+    src.width = src.height = 128;
+    src.getContext('2d').drawImage(preview, (preview.width - s) / 2, (preview.height - s) / 2, s, s, 0, 0, 128, 128);
+    for (const f of FILTERS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(f.id === state.filter));
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const cx = c.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(src, 0, 0);
+      applyFilter(cx, 128, 128, f);
+      const label = document.createElement('span');
+      label.textContent = f.name;
+      b.append(c, label);
+      b.addEventListener('click', () => { state.filter = f.id; syncEditor(); render(); persist(); });
+      $('filters').append(b);
+      filterButtons.push([f.id, b]);
+    }
+  }
+  function syncEditor() {
+    for (const [id, b] of filterButtons) b.setAttribute('aria-pressed', String(id === state.filter));
+    for (const b of $('aspects').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.aspect === state.aspect));
+    $('zoom').value = String(state.zoom);
+  }
+  function setEditing(on) {
+    if (on) { flip(false); before = { ...state }; buildFilterStrip(); syncEditor(); }
+    card.classList.toggle('editing', on);
+    editor.hidden = !on;
+    bar.hidden = on;
+    photoRole(on);
+    if (!on) showControls(true);
+    (on ? photoBox : $('edit')).focus({ preventScroll: true });
+    render();
+  }
+  $('edit').addEventListener('click', () => setEditing(true));
+  $('done').addEventListener('click', () => { persist(); setEditing(false); });
+  // Reset puts everything back as the page was made, the original caption included.
+  $('reset').addEventListener('click', () => {
+    Object.assign(state, fresh());
+    showCaption(state.caption);
+    syncEditor(); render(); persist();
+  });
+  $('aspects').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-aspect]');
+    if (!b) return;
+    state.aspect = b.dataset.aspect; state.zoom = 1;
+    syncEditor(); render(); persist();
+  });
+  $('zoom').addEventListener('input', (e) => { state.zoom = Number(e.target.value); render(); });
+  $('zoom').addEventListener('change', persist);
+
+  // Drag to reframe, pinch or scroll to zoom.
+  const pointers = new Map();
+  let pinch = 0;
+  function pan(dx, dy) {
+    const box = photoBox.getBoundingClientRect();
+    const r = cropRect(D.w, D.h);
+    state.cx -= (dx / box.width) * (r.w / D.w);
+    state.cy -= (dy / box.height) * (r.h / D.h);
+    render();
+  }
+  photoBox.addEventListener('pointerdown', (e) => {
+    if (!card.classList.contains('editing')) return;
+    photoBox.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  });
+  photoBox.addEventListener('pointermove', (e) => {
+    const p = pointers.get(e.pointerId);
+    if (!p) return;
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const before = Math.hypot(a.x - b.x, a.y - b.y);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const [c, d] = [...pointers.values()];
+      const after = Math.hypot(c.x - d.x, c.y - d.y);
+      if (pinch && before) { state.zoom = clamp(state.zoom * (after / before), 1, 4); $('zoom').value = String(state.zoom); render(); }
+      pinch = after;
+      return;
+    }
+    pan(e.clientX - p.x, e.clientY - p.y);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  });
+  const lift = (e) => { pointers.delete(e.pointerId); pinch = 0; persist(); };
+  photoBox.addEventListener('pointerup', lift);
+  photoBox.addEventListener('pointercancel', lift);
+  photoBox.addEventListener('wheel', (e) => {
+    if (!card.classList.contains('editing')) return;
+    e.preventDefault();
+    state.zoom = clamp(state.zoom * Math.exp(-e.deltaY * 0.002), 1, 4);
+    $('zoom').value = String(state.zoom);
+    render();
+  }, { passive: false });
+  photoBox.addEventListener('keydown', (e) => {
+    if (!card.classList.contains('editing')) return;
+    const step = 12, keys = { ArrowLeft: [step, 0], ArrowRight: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] };
+    if (keys[e.key]) { e.preventDefault(); pan(...keys[e.key]); persist(); }
+    if (e.key === '+' || e.key === '=') { state.zoom = clamp(state.zoom * 1.1, 1, 4); syncEditor(); render(); persist(); }
+    if (e.key === '-') { state.zoom = clamp(state.zoom / 1.1, 1, 4); syncEditor(); render(); persist(); }
+  });
+
+  // ── tapping the photo shows and hides the controls ──
+  const hint = $('hint');
+  const SEEN = KEY + ':seen';
+  let controlsShown = false;
+  function showControls(on) {
+    controlsShown = on;
+    bar.classList.toggle('concealed', !on);
+    card.classList.toggle('options', on);
+    if (!card.classList.contains('editing')) photoBox.setAttribute('aria-expanded', String(on));
+    if (!on) { openMenu(false); openShare(false); }
+    if (on && !hint.hidden) { hint.hidden = true; try { localStorage.setItem(SEEN, '1'); } catch {} }
+  }
+  /** The photo is a toggle button normally, and a drag surface while editing. */
+  function photoRole(editing) {
+    photoBox.tabIndex = 0;
+    photoBox.setAttribute('role', editing ? 'application' : 'button');
+    photoBox.setAttribute('aria-label', editing ? 'Photo. Arrow keys move it, plus and minus zoom.' : 'Photo. Show or hide options.');
+    if (editing) { photoBox.removeAttribute('aria-expanded'); photoBox.removeAttribute('aria-controls'); }
+    else { photoBox.setAttribute('aria-expanded', String(controlsShown)); photoBox.setAttribute('aria-controls', 'bar'); }
+  }
+  photoBox.addEventListener('click', () => { if (!card.classList.contains('editing')) showControls(!controlsShown); });
+  photoBox.addEventListener('keydown', (e) => {
+    if (card.classList.contains('editing') || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    showControls(!controlsShown);
+  });
+  let seen = false;
+  try { seen = localStorage.getItem(SEEN) === '1'; } catch {}
+  hint.hidden = seen;
+  photoRole(false);
+
+  addEventListener('resize', render);
+  bar.hidden = false;
+  ready.then(render);
+  render();
+})();
+</script>
+</body>
+</html>
