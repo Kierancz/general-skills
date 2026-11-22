@@ -3,6 +3,8 @@ name: music-visualizer
 description: 'Turn a song saved in Mossbear into a page that plays it with visuals that move to the music and, from a lyrics note the person saved, the words in time with this recording. The page is saved back to Mossbear. Use for /music-visualizer, "make a visualizer for this track", "play this song with lyrics", "sync the lyrics to this recording".'
 argument-hint: 'Example: "Make a visualizer for the track in my Music bundle, with the lyrics from my note"'
 user-invocable: true
+metadata:
+  mossbear-id: FGPCYMueY94UIIB0fcmdiQ
 ---
 
 # Music Visualizer
