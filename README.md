@@ -7,6 +7,7 @@ Agent skills that are not tied to any one codebase. Each lives in `.agents/skill
 | `address-review` | Triage pull request review comments, fix the valid ones, push |
 | `delegate` | Hand a bounded read (scout) or a mechanically checked edit (worker) to a flash-tier OpenRouter model under OpenCode, and read back a result the launcher verified. Needs Bun, OpenCode 2.x (auto-installed on linux-x64) and `OR_DELEGATE_API_KEY`; skips otherwise |
 | `deploy-site` | Put a static page on the public internet with here.now and return its URL |
+| `music-visualizer` | Turn a song saved in Mossbear into a page that plays it with visuals that move to the music and the person's lyrics note timed to that recording by speech recognition. Lyrics timing needs `ffmpeg` and `faster-whisper`; the browser check needs Playwright |
 | `orchestration` | Split work across subagents and sessions, with a model per subtask |
 | `photo-filer` | File photos and videos into `YEAR/YEAR-MM-DD/` folders with exiftool: plan first, log and undo, duplicates set aside |
 | `polaroid` | Turn one photo (from Mossbear or a local JPEG/PNG) and a caption into a polaroid-style page, deployed with `deploy-site`. Needs `python3` |
