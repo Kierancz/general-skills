@@ -4,6 +4,8 @@ description: 'Turn a photo (saved in Mossbear, or a local JPEG/PNG) and a captio
 disable-model-invocation: true
 argument-hint: 'Example: "Polaroid this one with the caption ''first snow'': https://app.mossbear.io/artifact/<id>"'
 user-invocable: true
+metadata:
+  mossbear-id: 5bPHj54lRBNQtKus97XQ5a
 ---
 
 # Polaroid
